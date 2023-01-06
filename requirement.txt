@@ -1,0 +1,5 @@
+torch
+transformers
+together_worker
+loguru
+boto3
