@@ -99,7 +99,7 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
             random.seed(self.task_info['seed'])
 
             contexts = self.task_info["prompt_seqs"]
-            inputs = self.tokenizer(contexts, return_tensors="pt").to(self.device)
+            inputs = self.tokenizer(contexts, return_tensors="pt")
             print(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
             input_length = inputs.input_ids.shape[1]
 
@@ -152,7 +152,8 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
         result = {
             "result_type": RequestTypeLanguageModelInference,
             "choices": inference_result[0]['choices'],
-            "raw_compute_time": time_elapsed
+            "raw_compute_time": time_elapsed,
+            "infrastructure": "auto-jax",
         }
         if self.task_info["logprobs"] > 0:
             result['logprobs'] = logprobs
@@ -164,9 +165,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--together_model_name', type=str, default=os.environ.get('SERVICE', 'Together-gpt-JT-6B-v1'),
                         help='worker name for together coordinator.')
-    parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
+    parser.add_argument('--alpa_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
-    parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
+    parser.add_argument('--model_path', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
@@ -184,7 +185,8 @@ if __name__ == "__main__":
     )
     fip = AlpaDistNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
-        "hf_model_name": args.hf_model_name,
+        "alpa_model_name": args.alpa_model_name,
+        "model_path": args.model_path,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
     })

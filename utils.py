@@ -85,7 +85,12 @@ def get_local_huggingface_tokenizer_model(model_name):
 
 
 def get_dist_alpa_tokenizer_model(model_name, model_path):
-    if model_name == 'opt-175b':
+    if model_name == 'opt-2.7b':
+        # The 30B version works for all OPT models.
+        tokenizer = AutoTokenizer.from_pretrained("facebook/opt-2.7b")
+        tokenizer.add_bos_token = False
+        model = get_model(model_name="alpa/opt-2.7b", path=model_path)
+    elif model_name == 'opt-175b':
         # The 30B version works for all OPT models.
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-30b")
         tokenizer.add_bos_token = False
