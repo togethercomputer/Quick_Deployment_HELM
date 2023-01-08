@@ -14,7 +14,8 @@ from utils import *
 import numpy as np
 import random
 
-class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
+
+class AlpaDistNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
         print(f"Model name: {model_name}")
@@ -36,17 +37,17 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "stop": [],
             "logprobs": 0,
         }
-        self.device = torch.device('cuda',0)
-        self.hf_model_name = args['hf_model_name']
-        model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'])
-        self.model = model.to(self.device)
+        self.alpa_model_name = args['alpa_model_name']
+        model, tokenizer = get_dist_alpa_tokenizer_model(args['alpa_model_name'], args['model_path'])
+
+        self.model = model
         self.tokenizer = tokenizer
         torch.manual_seed(0)
         torch.cuda.empty_cache()
-        print(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
+        print(f"<AlpaDistNLPModelInference.__init__> initialization done")
 
     def dispatch_request(self, args, env) -> Dict:
-        print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
+        print(f"<AlpaDistNLPModelInference.dispatch_request> starts")
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
@@ -81,16 +82,16 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "choices": inference_result[0]['choices'],
                 "raw_compute_time": 0.0
             }
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
+            print(f"<AlpaDistNLPModelInference.dispatch_request> (empty input or output) return: {result}")
             return result
         else:
             result = self._run_inference()
             torch.cuda.empty_cache()
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
+            print(f"<AlpaDistNLPModelInference.dispatch_request> return: {result}")
             return result
 
     def _run_inference(self):
-        print(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
+        print(f"<AlpaDistNLPModelInference._run_inference> start.")
 
         with torch.no_grad():
             torch.manual_seed(self.task_info['seed'])
@@ -131,7 +132,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
             time_elapsed = timeit.default_timer() - time
 
-        print(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+        print(f"[INFO] AlpaDistNLPModelInference time costs: {time_elapsed} ms. ")
 
         inference_result = []
         item = {'choices': [], }
@@ -165,6 +166,8 @@ if __name__ == "__main__":
                         help='worker name for together coordinator.')
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
+    parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
+                        help='hugging face model name (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
     parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),
@@ -179,7 +182,7 @@ if __name__ == "__main__":
         http_url=f"http://{coord_url}:8092",
         websocket_url=f"ws://{coord_url}:8093/websocket"
     )
-    fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
+    fip = AlpaDistNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "hf_model_name": args.hf_model_name,
         "worker_name": args.worker_name,
