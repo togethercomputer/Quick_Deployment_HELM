@@ -1,0 +1,1 @@
+python serving_dist_alpa_nlp_model.py --together_model_name together-alpa-bloom --alpa_model_name bloom --model_path /home/fm/helm_models/alpa_models/
