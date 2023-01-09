@@ -13,6 +13,8 @@
 
 cd /nlp/scr2/nlp/fmStore/fm/dev/Quick_Deployment_HELM
 
-# conda activate alpa
+# For singularity mode: (assume alpa_general.sif in the current directory)
+# singularity run --nv --bind /nlp/scr2/nlp/fmStore/fm:/home/fm alpa_general.sif /home/fm/dev/Quick_Deployment_HELM/start_alpa_opt2.7b.sh
 
-singularity run --nv --bind /nlp/scr2/nlp/fmStore/fm:/home/fm alpa_general.sif /home/fm/dev/Quick_Deployment_HELM/start_alpa_opt2.7b.sh
+# For docker mode:
+docker run --rm --gpus '"device=0,1"' --ipc=host -d -v /nlp/scr2/nlp/fmStore/fm:/home/fm binhang/alpa /home/fm/dev/Quick_Deployment_HELM/start_alpa_opt2.7b.sh
