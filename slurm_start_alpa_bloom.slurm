@@ -1,7 +1,8 @@
 #!/bin/bash
-#SBATCH --job-name=together-alpa-OPT-2.7B
+#SBATCH --job-name=together-alpa-OPT-Bloom
 #SBATCH --time=1:00:00
 #SBATCH --ntasks=1
+#SBATCH --exclude=sphinx[1-3]
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=12G
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.out
