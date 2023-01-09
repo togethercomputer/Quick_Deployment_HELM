@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=together-alpa-OPT-Bloom
-#SBATCH --time=1:00:00
+#SBATCH --time=18:00:00
 #SBATCH --ntasks=1
 #SBATCH --exclude=sphinx[1-3]
 #SBATCH --cpus-per-task=8
@@ -14,7 +14,7 @@
 
 cd /nlp/scr2/nlp/fmStore/fm/dev/Quick_Deployment_HELM
 
-echo $hostname
+echo "My host name:" $HOSTNAME
 
 nvidia-smi
 
