@@ -13,6 +13,8 @@
 
 cd /nlp/scr2/nlp/fmStore/fm/dev/Quick_Deployment_HELM
 
+nvidia-smi
+
 # For singularity mode: (assume alpa_general.sif in the current directory)
 # singularity run --nv --bind /nlp/scr2/nlp/fmStore/fm:/home/fm alpa_general.sif /home/fm/dev/Quick_Deployment_HELM/start_alpa_opt2.7b.sh
 
