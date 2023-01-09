@@ -6,7 +6,7 @@
 #SBATCH --mem-per-cpu=128G
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.out
 #SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.err
-#SBATCH --partition=sphinx-hi
+#SBATCH --partition=sphinx
 #SBATCH --account=nlp
 #SBATCH --gpus=a100:8
 
