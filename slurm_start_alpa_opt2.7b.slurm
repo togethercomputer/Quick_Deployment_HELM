@@ -8,7 +8,7 @@
 #SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-OPT-2.7B-%j.err
 #SBATCH --partition=jag-standard
 #SBATCH --account=nlp
-#SBATCH --gpus=3090:2
+#SBATCH --gpus=a100:2
 
 
 cd /nlp/scr2/nlp/fmStore/fm/dev/Quick_Deployment_HELM
