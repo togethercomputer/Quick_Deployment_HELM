@@ -14,6 +14,8 @@
 
 cd /nlp/scr2/nlp/fmStore/fm/dev/Quick_Deployment_HELM
 
+echo $hostname
+
 nvidia-smi
 
 # For singularity mode: (assume alpa_general.sif in the current directory)

@@ -95,12 +95,10 @@ def get_dist_alpa_tokenizer_model(model_name, model_path):
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-30b")
         tokenizer.add_bos_token = False
         model = get_model(model_name="alpa/opt-175b", path=model_path)
-
     elif model_name == 'bloom':
         tokenizer = AutoTokenizer.from_pretrained('bigscience/bloom')
         tokenizer.add_bos_token = False
         model = get_model(model_name="alpa/bloom", path=model_path)
-
     elif model_name == 'bloomz':
         tokenizer = AutoTokenizer.from_pretrained('bigscience/bloomz')
         tokenizer.add_bos_token = False
