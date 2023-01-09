@@ -3,7 +3,7 @@
 #SBATCH --time=1:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem-per-cpu=128G
+#SBATCH --mem-per-cpu=12G
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.out
 #SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.err
 #SBATCH --partition=sphinx
