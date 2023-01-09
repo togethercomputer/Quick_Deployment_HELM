@@ -6,7 +6,7 @@
 #SBATCH --mem-per-cpu=16G
 #SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-OPT-2.7B-%j.out
 #SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-OPT-2.7B-%j.err
-#SBATCH --partition=jag-standard
+#SBATCH --partition=sphinx-hi
 #SBATCH --account=nlp
 #SBATCH --gpus=a100:2
 
