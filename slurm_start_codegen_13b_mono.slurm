@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=together-alpa-OPT-Bloom
+#SBATCH --job-name=together-hf-codegen-13b-mono
 #SBATCH --time=18:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=12G
-#SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.out
-#SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-alpa-Bloom-%j.err
+#SBATCH --output=/afs/cs.stanford.edu/u/biyuan/fm/together/together-hf-codegen_13b_mono-%j.out
+#SBATCH --error=/afs/cs.stanford.edu/u/biyuan/fm/together/together-hf-codegen_13b_mono-%j.err
 #SBATCH --partition=sphinx
 #SBATCH --account=nlp
 #SBATCH --gpus=a100:1
