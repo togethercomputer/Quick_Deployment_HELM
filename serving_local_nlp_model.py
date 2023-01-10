@@ -38,7 +38,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         }
         self.device = torch.device('cuda', 0)
         self.hf_model_name = args['hf_model_name']
-        model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'])
+        if args['model_path'] != '':
+            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'])
+        else:
+            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'])
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
         torch.manual_seed(0)
@@ -165,6 +168,8 @@ if __name__ == "__main__":
                         help='worker name for together coordinator.')
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
+    parser.add_argument('--model_path', type=str, default='',
+                        help='hugging face model path (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
     parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),
@@ -182,6 +187,7 @@ if __name__ == "__main__":
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "hf_model_name": args.hf_model_name,
+        "model_path": args.model_path,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
     })

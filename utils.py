@@ -47,10 +47,13 @@ def post_processing_text(output_text, stop_tokens):
     return post_processed_text
 
 
-def get_local_huggingface_tokenizer_model(model_name):
+def get_local_huggingface_tokenizer_model(model_name, model_path=None):
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
+        if model_path is not None:
+            model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
+        else:
+            model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
     elif model_name == 'facebook/opt-350m':
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
         model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=torch.float16)
@@ -111,14 +114,11 @@ def get_dist_alpa_tokenizer_model(model_name, model_path):
     return model, tokenizer
 
 
-
-
-
 def convert_hf_score_to_logprobs(scores, k, tokenizer):
     logprobs = []
     for current_step_score in scores:
         print(current_step_score.shape)
-        value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score), dim=0), k)
+        value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=0), k)
         current_logprob = list(zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist()))
         logprobs.append(current_logprob)
     return logprobs

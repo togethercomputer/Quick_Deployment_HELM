@@ -13,7 +13,7 @@ my_post_dict = {
     "temperature": float(temperature),
     "max_tokens": int(max_new_tokens),
     "stop": [],
-    "logprobs": 3
+    "logprobs": 0
 }
 
 print(my_post_dict)
