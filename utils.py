@@ -51,6 +51,7 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if model_path is not None:
+            print(f"<get_local_huggingface_tokenizer_model> Load from path: {model_path}")
             model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
         else:
             model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
