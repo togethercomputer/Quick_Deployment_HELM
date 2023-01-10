@@ -36,7 +36,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "stop": [],
             "logprobs": 0,
         }
-        self.device = torch.device('cuda',0)
+        self.device = torch.device('cuda', 0)
         self.hf_model_name = args['hf_model_name']
         model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'])
         self.model = model.to(self.device)
