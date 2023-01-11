@@ -1,5 +1,5 @@
 executable = condor_start_local_opt350m.sh
-
++SingularityImage = "stash:///ospool/PROTECTED/binhang.yuan/singularities/alpa_general.sif"
 # transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together, stash:///ospool/PROTECTED/binhang.yuan/singularities/alpa_general.sif
 transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together
 
