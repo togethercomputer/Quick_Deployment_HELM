@@ -11,6 +11,6 @@ request_memory = 1000 MB
 request_disk = 1000 MB
 request_GPUs = 1
 
-requirements = CUDADeviceName == "A100-PCIE-40GB"
+requirements = CUDADeviceName == "A100-PCIE-40GB" && OpSysMajorVer >= 5.0
 
 queue 1
