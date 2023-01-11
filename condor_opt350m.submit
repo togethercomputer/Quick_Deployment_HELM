@@ -3,14 +3,16 @@ executable = condor_start_local_opt350m.sh
 # transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together, stash:///ospool/PROTECTED/binhang.yuan/singularities/alpa_general.sif
 transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together
 
-error = condor_start_local_opt350m.error
-output = condor_start_local_opt350m.output
-log = condor_start_local_opt350m.log
+error = condor_start_local_opt350m.$(Process).error
+output = condor_start_local_opt350m.$(Process).output
+log = condor_start_local_opt350m.$(Process).log
 
 request_cpus = 1
 request_memory = 1000 MB
 request_disk = 1000 MB
 request_GPUs = 1
+
+Requirements = HasSingularity
 
 # requirements = CUDADeviceName == "V100-PCIE-32GB" && OpSysMajorVer >= 5.0
 
