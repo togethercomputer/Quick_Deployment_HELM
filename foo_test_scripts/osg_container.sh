@@ -1,4 +1,4 @@
-/etc/singularity shell \
+apptainer shell \
             --home $PWD:/srv \
             --pwd /srv \
             --bind /cvmfs \

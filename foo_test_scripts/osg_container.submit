@@ -9,6 +9,6 @@ request_cpus = 1
 request_memory = 1000 MB
 request_disk = 1000 MB
 
-Requirements = HasSingularity
+Requirements = HAS_SINGULARITY == True && OSG_HOST_KERNEL_VERSION >= 31000
 
 queue
