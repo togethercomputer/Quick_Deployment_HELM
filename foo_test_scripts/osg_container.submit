@@ -1,9 +1,14 @@
 +SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el8:latest"
 executable = osg_container.sh
 
+error = condor_debug_container.$(Process).error
+output = condor_debug_container.$(Process).output
+log = condor_debug_container.$(Process).log
+
 request_cpus = 1
 request_memory = 1000 MB
 request_disk = 1000 MB
+
 Requirements = HasSingularity
 
 queue
