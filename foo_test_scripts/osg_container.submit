@@ -1,4 +1,5 @@
 +SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el8:latest"
+executable = osg_container.sh
 
 request_cpus = 1
 request_memory = 1000 MB
