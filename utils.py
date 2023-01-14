@@ -78,6 +78,12 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
     elif model_name == 'EleutherAI/gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
+    elif model_name == 'Together/gpt-neoxT-20b':
+        if model_path is not None:
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
+        else:
+            assert False
     else:
         assert False, "Model not supported yet."
 
