@@ -59,8 +59,12 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
         model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=torch.float16)
     elif model_name == 'google/flan-t5-xxl':
-        tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-xxl")
-        model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", torch_dtype=torch.bfloat16)
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
+        if model_path is not None:
+            print(f"<get_local_huggingface_tokenizer_model> Load from path: {model_path}")
+            model = T5ForConditionalGeneration.from_pretrained(model_path, torch_dtype=torch.bfloat16)
+        else:
+            model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", torch_dtype=torch.bfloat16)
     elif model_name == 't5-11b':
         tokenizer = AutoTokenizer.from_pretrained('t5-11b', model_max_length=512)
         # tokenizer.model_max_length=512
