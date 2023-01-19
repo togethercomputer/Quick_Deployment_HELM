@@ -125,7 +125,7 @@ def convert_hf_score_to_logprobs(scores, k, tokenizer):
     logprobs = []
     for current_step_score in scores:
         print(current_step_score.shape)
-        value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=0), k)
+        value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=-1), k)
         current_logprob = list(zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist()))
         logprobs.append(current_logprob)
     return logprobs
