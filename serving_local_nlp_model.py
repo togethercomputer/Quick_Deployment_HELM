@@ -58,7 +58,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["output_len"] = get_int(args.get("max_tokens", 16), default=16)
         self.task_info["beam_width"] = get_int(args.get("beam_width", 1), default=1)
         self.task_info["top_k"] = get_int(args.get("top_k", 50), default=50)
-        self.task_info["top_p"] = get_float(args.get("top_p", 1.0), default=1.0)
+        if self.hf_model_name == "google/flan-t5-xxl":
+            self.task_info["top_p"] = get_float(args.get("top_p", 1.0), default=1.0)
+        else:
+            self.task_info["top_p"] = get_float(args.get("top_p", 0.0), default=0.0)
         self.task_info["beam_search_diversity_rate"] = get_float(args.get("beam_search_diversity_rate", 0.0),
                                                                  default=0.0)
         self.task_info["temperature"] = get_float(args.get("temperature", 0.8), default=0.8)
