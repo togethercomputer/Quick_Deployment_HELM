@@ -1,0 +1,11 @@
+executable = osg_ping.sh
+
+error = ../exec_logs/ping.$(ClusterId).$(ProcId).error
+output = ../exec_logs/ping.$(ClusterId).$(ProcId).output
+log = ../exec_logs/ping.$(ClusterId).$(ProcId).log
+
+request_cpus = 1
+request_memory = 8000 MB
+request_disk = 30000 MB
+
+queue 1
