@@ -3,9 +3,9 @@ executable = condor_start_local_opt350m.sh
 # transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together, stash:///ospool/PROTECTED/binhang.yuan/singularities/alpa_general.sif
 transfer_input_files = serving_local_nlp_model.py, utils.py, stash:///ospool/PROTECTED/binhang.yuan/together
 
-error = ../exec_logs/condor_start_local_opt350m.error
-output = ../exec_logs/condor_start_local_opt350m.output
-log = ../exec_logs/condor_start_local_opt350m.log
+error = ../exec_logs/condor_start_local_opt350m.$(ClusterId).$(ProcId).error
+output = ../exec_logs/condor_start_local_opt350m.$(ClusterId).$(ProcId).output
+log = ../exec_logs/condor_start_local_opt350m.$(ClusterId).$(ProcId).log
 
 request_cpus = 1
 request_memory = 1000 MB
