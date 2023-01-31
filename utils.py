@@ -1,8 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 from transformers import AutoConfig, AutoTokenizer
-from llm_serving.model.wrapper import get_model
-
 
 
 def get_int(input_: str, default=0) -> int:
@@ -99,6 +97,7 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
 
 
 def get_dist_alpa_tokenizer_model(model_name, model_path):
+    from llm_serving.model.wrapper import get_model
     if model_name == 'opt-2.7b':
         # The 30B version works for all OPT models.
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-2.7b")
