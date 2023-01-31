@@ -8,8 +8,8 @@ output = ../exec_logs/condor_start_local_opt350m.$(ClusterId).$(ProcId).output
 log = ../exec_logs/condor_start_local_opt350m.$(ClusterId).$(ProcId).log
 
 request_cpus = 1
-request_memory = 1000 MB
-request_disk = 1000 MB
+request_memory = 8000 MB
+request_disk = 30000 MB
 request_GPUs = 1
 
 Requirements = HasSingularity
