@@ -14,6 +14,7 @@ from utils import *
 import numpy as np
 import random
 
+
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
