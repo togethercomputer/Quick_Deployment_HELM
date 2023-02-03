@@ -36,12 +36,11 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install -e . && \
     echo "conda activate alpa" >> ~/.bashrc
 
-#RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/archlinux/x86_64/bin/node-latest -O /usr/local/bin/together-node && \
-#    chmod +x /usr/local/bin/together-node
+RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
+    chmod +x /usr/local/bin/together-node
 ENV PATH /opt/conda/condabin/conda/bin:$PATH
 
 RUN mkdir -p /app
 COPY . /app
 WORKDIR /app
 RUN chmod +x /app/serve_neoxt.sh
-RUN mv /app/together-node /usr/local/bin/together-node
