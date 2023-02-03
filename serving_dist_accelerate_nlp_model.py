@@ -113,7 +113,7 @@ class HuggingFaceDistNLPModelInference(FastInferenceInterface):
             time = timeit.default_timer()
             if self.task_info["temperature"] == 0:
                 outputs = self.model.generate(
-                    **inputs, do_sample=True, top_p=self.task_info['top_p'],
+                    inputs["input_ids"], do_sample=True, top_p=self.task_info['top_p'],
                     temperature=1.0, top_k=1,
                     max_new_tokens=self.task_info["output_len"],
                     return_dict_in_generate=True,
@@ -122,7 +122,7 @@ class HuggingFaceDistNLPModelInference(FastInferenceInterface):
                 )
             else:
                 outputs = self.model.generate(
-                    **inputs, do_sample=True, top_p=self.task_info['top_p'],
+                    inputs["input_ids"], do_sample=True, top_p=self.task_info['top_p'],
                     temperature=self.task_info["temperature"],
                     max_new_tokens=self.task_info["output_len"],
                     return_dict_in_generate=True,
