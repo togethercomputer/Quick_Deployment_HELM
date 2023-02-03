@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
 
 
 def get_int(input_: str, default=0) -> int:
@@ -105,6 +105,23 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'left'
     tokenizer.truncation_side = 'left'
+    return model, tokenizer
+
+
+def get_dist_accelerate_tokenizer_model(model_name, model_path):
+    from accelerate import init_empty_weights,load_checkpoint_and_dispatch
+    if model_name == "facebook/galactica-120b":
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = OPTForCausalLM.from_config(config)
+            model = load_checkpoint_and_dispatch(
+                model, model_path, device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
+            )
+            tokenizer = AutoTokenizer.from_pretrained("facebook/galactica-120b")
+    else:
+        assert False, f"Not legal name {model_name}"
+    print(f"<get_dist_accelerate_tokenizer_model>: {model_name} hf_device_map")
+    print(model.hf_device_map)
     return model, tokenizer
 
 
