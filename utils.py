@@ -113,7 +113,7 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
     if model_name == "facebook/galactica-120b":
         config = AutoConfig.from_pretrained(model_path)
         with init_empty_weights():
-            model = OPTForCausalLM.from_config(config)
+            model = AutoModelForCausalLM.from_config(config)
             model = load_checkpoint_and_dispatch(
                 model, model_path, device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
             )
