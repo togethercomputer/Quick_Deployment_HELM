@@ -1,0 +1,2 @@
+#!/bin/bash
+/opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --together_model_name together/codegen-13B-mono --hf_model_name google/flan-t5-xxl --model_path /home/user/.together/models/codegen-13B-mono
