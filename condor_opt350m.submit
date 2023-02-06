@@ -13,7 +13,8 @@ request_disk = 30000 MB
 request_GPUs = 1
 
 # Requirements = HasSingularity
-
 # requirements = CUDADeviceName == "V100-PCIE-32GB" && OpSysMajorVer >= 5.0
+
+requirements = (GPUs_Capability == 8.0) && (OpSysMajorVer >= 5.0)
 
 queue 1
