@@ -14,7 +14,8 @@ request_GPUs = 1
 
 # Requirements = HasSingularity
 # requirements = CUDADeviceName == "V100-PCIE-32GB" && OpSysMajorVer >= 5.0
-
 requirements = (GPUs_DriverVersion == 11.3) && (OpSysMajorVer >= 5.0)
+
+should_transfer_files = yes
 
 queue 1
