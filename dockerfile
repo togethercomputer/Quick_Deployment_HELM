@@ -28,6 +28,7 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install alpa && \
     pip3 install jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
     pip3 install together_worker && \
+    pip3 install accelerate && \
     pip3 install "transformers<=4.23.1" fastapi uvicorn omegaconf jinja2  && \
     pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113  && \
     cd /build && \
