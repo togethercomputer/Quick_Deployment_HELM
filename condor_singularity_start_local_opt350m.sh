@@ -1,3 +1,5 @@
+echo "This should be inside container"
+
 nvidia-smi
 
 echo "current directory:"
