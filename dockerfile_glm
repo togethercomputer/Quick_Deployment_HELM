@@ -1,3 +1,3 @@
 FROM zxdu20/glm-cuda112
 
-RUN pip install together_worker
+RUN pip3 install together_worker

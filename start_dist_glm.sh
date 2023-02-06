@@ -13,8 +13,6 @@ MIN_GEN_LENGTH=0
 TEMP=0.9
 TOPK=1
 TOPP=0
-S3TOKEN="Gathering-Open-teeth-7office-Irene-drill-alec2-Unguided-Hardening2-Darkish-humid-Coset-gaze-8Pines-clambake"
-
 
 
 MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
