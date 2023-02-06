@@ -1,7 +1,6 @@
 cd /home/fm/dev/Quick_Deployment_HELM
 
-./together start &
-
+./together start >> glm_together.log &
 
 MODEL_TYPE="glm-130b"
 CHECKPOINT_PATH="/root/fm/models/glm-130b-sat"
@@ -39,3 +38,7 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
 
 
 torchrun --nproc_per_node $MP_SIZE dist_latency_glm_inference_w_httpclient.py $MODEL_ARGS
+
+
+
+
