@@ -11,8 +11,8 @@ ls
 echo "files in /opt/conda/envs directory:"
 ls /opt/conda/envs
 
-echo "ping Google:"
-ping google.com -c 5
+echo "Check network connection:"
+wget --delete-after www.google.com
 
 # chmod 777 together
 
