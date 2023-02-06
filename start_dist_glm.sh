@@ -37,7 +37,7 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --top_p $TOPP"
 
 
-python3 -m torch.distributed.launch --nproc_per_node $MP_SIZE dist_latency_glm_inference_w_httpclient.py $MODEL_ARGS
+python3 -m torch.distributed.launch --nproc_per_node $MP_SIZE serving_dist_glm.py $MODEL_ARGS
 
 
 
