@@ -7,7 +7,6 @@ from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
 import logging
-from utils import *
 from glm_utils import *
 
 
