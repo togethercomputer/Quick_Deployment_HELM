@@ -1,6 +1,6 @@
 cd /home/fm/dev/Quick_Deployment_HELM
 
-./together start >> glm_together.log &
+# ./together start >> glm_together.log &
 
 MODEL_TYPE="glm-130b"
 CHECKPOINT_PATH="/root/fm/models/glm-130b-sat"
