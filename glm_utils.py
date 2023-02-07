@@ -360,6 +360,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config):
         for i in range(len(pattern_list)):
             pattern = pattern_list[i]
             sub_text = text_list[i]
+            print(f"<fill_blanks_efficient> sub_text: {sub_text}")
             seq.extend(tokenizer.tokenize(sub_text))
             seq.append(tokenizer.get_command(pattern))
 
