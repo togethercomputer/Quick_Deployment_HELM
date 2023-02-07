@@ -8,6 +8,7 @@ from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
 import logging
 from glm_utils import *
+from utils import *
 
 
 class DistGLMInference(FastInferenceInterface):
