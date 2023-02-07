@@ -13,7 +13,16 @@ from utils import *
 
 class DistGLMInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None, glm_args=None) -> None:
+        try:
+            if not dist.is_initialized():
+                dist.init_process_group(backend='mpi')
+        except:
+            print("[INFO] WARNING: Have initialized the process group")
+        args['worker_name'] = 'worker' + str(dist.get_rank())
+        args['workers'] = dist.get_world_size()
+        args['rank'] = dist.get_rank()
         super().__init__(model_name, args if args is not None else {})
+
         print(f"Model name: {model_name}")
         print("\n=============== <DistGLMInference> Arguments ===============")
         print(args.keys())
