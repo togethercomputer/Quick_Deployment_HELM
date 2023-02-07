@@ -235,10 +235,6 @@ def add_generation_specific_args(parser):
 def together_client_args(parser):
     parser.add_argument('--together_model_name', type=str, default=os.environ.get('SERVICE', 'Together-gpt-JT-6B-v1'),
                         help='worker name for together coordinator.')
-    parser.add_argument('--alpa_model_name', type=str, default='facebook/opt-350m',
-                        help='hugging face model name (used to load config).')
-    parser.add_argument('--model_path', type=str, default='facebook/opt-350m',
-                        help='hugging face model name (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
     parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),

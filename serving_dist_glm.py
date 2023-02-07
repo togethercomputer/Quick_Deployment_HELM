@@ -12,10 +12,10 @@ from utils import *
 
 
 class DistGLMInference(FastInferenceInterface):
-    def __init__(self, model_name: str, args=None) -> None:
+    def __init__(self, model_name: str, args=None, glm_args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
         print(f"Model name: {model_name}")
-        print("\n=============== Arguments ===============")
+        print("\n=============== <DistGLMInference> Arguments ===============")
         print(args.keys())
         print(args)
         print("=========================================\n")
@@ -31,7 +31,7 @@ class DistGLMInference(FastInferenceInterface):
             "logprobs": 0,
         }
 
-        model, tokenizer = initialize_model_and_tokenizer(args)
+        model, tokenizer = initialize_model_and_tokenizer(glm_args)
 
         self.model = model
         self.tokenizer = tokenizer
@@ -165,11 +165,13 @@ if __name__ == "__main__":
         http_url=f"http://{coord_url}:8092",
         websocket_url=f"ws://{coord_url}:8093/websocket"
     )
-    args = initialize()
-    fip = DistGLMInference(model_name=args.together_model_name, args={
+    glm_args = initialize()
+    print("\n=============== <Main> Arguments ===============")
+
+    fip = DistGLMInference(model_name="together/glm-130b", args={
         "coordinator": coordinator,
-        "model_path": args.model_path,
-        "worker_name": args.worker_name,
-        "group_name": args.group_name,
-    })
+        "model_path": glm_args.model_path,
+        "worker_name": glm_args.worker_name,
+        "group_name": glm_args.group_name,
+    }, glm_args=glm_args)
     fip.start()
