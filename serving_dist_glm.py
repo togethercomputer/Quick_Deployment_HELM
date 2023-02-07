@@ -168,10 +168,9 @@ if __name__ == "__main__":
     glm_args = initialize()
     print("\n=============== <Main> Arguments ===============")
     for arg, value in sorted(vars(glm_args).items()):
-        print("%s: %s" % (arg, value))
+        print(f"{arg}: {value}")
     fip = DistGLMInference(model_name="together/glm-130b", args={
         "coordinator": coordinator,
-        "model_path": glm_args.model_path,
         "worker_name": glm_args.worker_name,
         "group_name": glm_args.group_name,
     }, glm_args=glm_args)
