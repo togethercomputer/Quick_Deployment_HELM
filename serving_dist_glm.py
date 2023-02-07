@@ -83,7 +83,7 @@ class DistGLMInference(FastInferenceInterface):
         print(f"<DistGLMInference._run_inference> start.")
         print(f"Rank-<{dist.get_rank()}> join inference.")
         start_time = time.time()
-        raw_text = self.task_info['prompt']
+        raw_text = self.task_info['prompt_seqs']
         for i in range(len(raw_text)):
             raw_text[i] = raw_text[i].strip()
 
