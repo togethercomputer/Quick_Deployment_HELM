@@ -85,6 +85,7 @@ class DistGLMInference(FastInferenceInterface):
             print(f"<DistGLMInference.dispatch_request> (empty input or output) return: {result}")
             return result
         else:
+            self._sync_task_info()
             result = self._run_inference()
             torch.cuda.empty_cache()
             print(f"<DistGLMInference.dispatch_request> return: {result}")
