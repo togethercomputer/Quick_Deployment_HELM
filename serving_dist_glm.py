@@ -29,6 +29,7 @@ class DistGLMInference(FastInferenceInterface):
             "temperature": 0.1,
             "stop": [],
             "logprobs": 0,
+            "max_sequence_length": glm_args.max_sequence_length
         }
 
         model, tokenizer = initialize_model_and_tokenizer(glm_args)

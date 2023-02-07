@@ -1,4 +1,5 @@
 FROM zxdu20/glm-cuda112
 
 RUN pip3 install together_worker && \
-    pip3 install SwissArmyTransformer
+    pip3 install SwissArmyTransformer && \
+    pip3 install icetk
