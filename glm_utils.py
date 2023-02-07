@@ -363,6 +363,7 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config):
             seq.extend(tokenizer.tokenize(sub_text))
             seq.append(tokenizer.get_command(pattern))
 
+        print(f"<fill_blanks_efficient> text_list: {text_list}, {text_list[-1]}")
         seq.extend(tokenizer.tokenize(text_list[-1]))
 
         if "MASK]" not in raw_text:
