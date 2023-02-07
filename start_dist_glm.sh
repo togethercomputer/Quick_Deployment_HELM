@@ -27,7 +27,6 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --skip-init \
             --fp16 \
             --seed $SEED \
-            --upload-token $S3TOKEN \
             --mode inference \
             --sampling-strategy BeamSearchStrategy \
             --out-seq-length $MAX_OUTPUT_LENGTH \
