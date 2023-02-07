@@ -1,9 +1,8 @@
 cd /home/fm/dev/Quick_Deployment_HELM
 
-# ./together start >> glm_together.log &
 
 MODEL_TYPE="glm-130b"
-CHECKPOINT_PATH="/root/fm/models/glm-130b-sat"
+CHECKPOINT_PATH="/home/fm/models/glm-130b-sat"
 MP_SIZE=8
 SEED=1234
 MAX_OUTPUT_LENGTH=128
@@ -27,7 +26,6 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --skip-init \
             --fp16 \
             --seed $SEED \
-            --upload-token $S3TOKEN \
             --mode inference \
             --sampling-strategy BeamSearchStrategy \
             --out-seq-length $MAX_OUTPUT_LENGTH \
@@ -36,6 +34,8 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --top_k $TOPK \
             --top_p $TOPP"
 
+
+./together start &
 
 python3 -m torch.distributed.launch --nproc_per_node $MP_SIZE serving_dist_glm.py $MODEL_ARGS
 

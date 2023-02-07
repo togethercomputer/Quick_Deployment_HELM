@@ -8,13 +8,23 @@ from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
 import logging
 from glm_utils import *
+from utils import *
 
 
 class DistGLMInference(FastInferenceInterface):
-    def __init__(self, model_name: str, args=None) -> None:
+    def __init__(self, model_name: str, args=None, glm_args=None) -> None:
+        try:
+            if not dist.is_initialized():
+                dist.init_process_group(backend='mpi')
+        except:
+            print("[INFO] WARNING: Have initialized the process group")
+        args['worker_name'] = 'worker' + str(dist.get_rank())
+        args['workers'] = dist.get_world_size()
+        args['rank'] = dist.get_rank()
         super().__init__(model_name, args if args is not None else {})
+
         print(f"Model name: {model_name}")
-        print("\n=============== Arguments ===============")
+        print("\n=============== <DistGLMInference> Arguments ===============")
         print(args.keys())
         print(args)
         print("=========================================\n")
@@ -28,9 +38,11 @@ class DistGLMInference(FastInferenceInterface):
             "temperature": 0.1,
             "stop": [],
             "logprobs": 0,
+            "max_sequence_length": glm_args.max_sequence_length,
+            "prompt_embedding": False
         }
 
-        model, tokenizer = initialize_model_and_tokenizer(args)
+        model, tokenizer = initialize_model_and_tokenizer(glm_args)
 
         self.model = model
         self.tokenizer = tokenizer
@@ -73,6 +85,7 @@ class DistGLMInference(FastInferenceInterface):
             print(f"<DistGLMInference.dispatch_request> (empty input or output) return: {result}")
             return result
         else:
+            self._sync_task_info()
             result = self._run_inference()
             torch.cuda.empty_cache()
             print(f"<DistGLMInference.dispatch_request> return: {result}")
@@ -82,12 +95,13 @@ class DistGLMInference(FastInferenceInterface):
         print(f"<DistGLMInference._run_inference> start.")
         print(f"Rank-<{dist.get_rank()}> join inference.")
         start_time = time.time()
-        raw_text = self.task_info['prompt']
+        raw_text = self.task_info['prompt_seqs']
         for i in range(len(raw_text)):
             raw_text[i] = raw_text[i].strip()
-
+        print(f"DistGLMInference._run_inference: {raw_text}")
         batch_size = min(len(raw_text), 32)
         num_iter = math.ceil(len(raw_text) / batch_size)
+        print(f"DistGLMInference._run_inference: batch size: {batch_size}, num iter: {num_iter}")
         answers = []
         last_layer_embedding = []
         top_logprobs = []
@@ -100,6 +114,7 @@ class DistGLMInference(FastInferenceInterface):
 
         for iter_i in range(num_iter):
             current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
+            print(f"DistGLMInference._run_inference: current_raw_text: {current_raw_text}")
             if self.task_info['temperature'] == 0:
                 strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=1, top_k=1,
                                         top_p=self.task_info['top_p'], end_tokens=self.end_tokens)
@@ -131,7 +146,7 @@ class DistGLMInference(FastInferenceInterface):
             result = to_result(answers, self.task_info, prompt_str_lengths, top_logprobs)
             return_payload = {
                 "result_type": RequestTypeLanguageModelInference,
-                "choices": result,
+                "choices": result["inference_result"][0]['choices'],
                 'raw_compute_time': end_time - start_time
             }
             return return_payload
@@ -158,25 +173,19 @@ class DistGLMInference(FastInferenceInterface):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser()
-
-
-    args = parser.parse_args()
-
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
-
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
         http_url=f"http://{coord_url}:8092",
         websocket_url=f"ws://{coord_url}:8093/websocket"
     )
-
-    args = initialize()
-
-    fip = DistGLMInference(model_name=args.together_model_name, args={
+    glm_args = initialize()
+    print("\n=============== <Main> Arguments ===============")
+    for arg, value in sorted(vars(glm_args).items()):
+        print(f"{arg}: {value}")
+    fip = DistGLMInference(model_name="together/glm-130b", args={
         "coordinator": coordinator,
-        "model_path": args.model_path,
-        "worker_name": args.worker_name,
-        "group_name": args.group_name,
-    })
+        "worker_name": glm_args.worker_name,
+        "group_name": glm_args.group_name,
+    }, glm_args=glm_args)
     fip.start()
