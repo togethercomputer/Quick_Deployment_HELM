@@ -353,6 +353,8 @@ def fill_blanks_efficient(raw_texts: str, model, tokenizer, strategy, config):
     for raw_text in raw_texts:
         mask_pattern = r"\[g?MASK\]"
         text_list = re.split(mask_pattern, raw_text)
+        print(f"<fill_blanks_efficient> text_list: {text_list}")
+
         pattern_list = re.compile(mask_pattern).findall(raw_text)
         seq = []
         for i in range(len(pattern_list)):

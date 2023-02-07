@@ -102,6 +102,7 @@ class DistGLMInference(FastInferenceInterface):
 
         for iter_i in range(num_iter):
             current_raw_text = raw_text[iter_i * batch_size: (iter_i + 1) * batch_size]
+            print(f"DistGLMInference._run_inference: current_raw_text: {current_raw_text}")
             if self.task_info['temperature'] == 0:
                 strategy = BaseStrategy(batch_size=len(current_raw_text), temperature=1, top_k=1,
                                         top_p=self.task_info['top_p'], end_tokens=self.end_tokens)
