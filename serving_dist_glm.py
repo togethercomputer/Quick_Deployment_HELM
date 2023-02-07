@@ -158,21 +158,13 @@ class DistGLMInference(FastInferenceInterface):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    parser = argparse.ArgumentParser()
-
-
-    args = parser.parse_args()
-
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
-
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
         http_url=f"http://{coord_url}:8092",
         websocket_url=f"ws://{coord_url}:8093/websocket"
     )
-
     args = initialize()
-
     fip = DistGLMInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "model_path": args.model_path,

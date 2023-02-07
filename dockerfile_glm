@@ -1,3 +1,4 @@
 FROM zxdu20/glm-cuda112
 
-RUN pip3 install together_worker
+RUN pip3 install together_worker && \
+    pip3 install SwissArmyTransformer
