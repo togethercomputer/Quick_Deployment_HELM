@@ -86,9 +86,10 @@ class DistGLMInference(FastInferenceInterface):
         raw_text = self.task_info['prompt_seqs']
         for i in range(len(raw_text)):
             raw_text[i] = raw_text[i].strip()
-
+        print(f"DistGLMInference._run_inference: {raw_text}")
         batch_size = min(len(raw_text), 32)
         num_iter = math.ceil(len(raw_text) / batch_size)
+        print(f"DistGLMInference._run_inference: batch size: {batch_size}, num iter: {num_iter}")
         answers = []
         last_layer_embedding = []
         top_logprobs = []
