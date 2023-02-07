@@ -146,7 +146,7 @@ class DistGLMInference(FastInferenceInterface):
             result = to_result(answers, self.task_info, prompt_str_lengths, top_logprobs)
             return_payload = {
                 "result_type": RequestTypeLanguageModelInference,
-                "choices": result,
+                "choices": result["inference_result"][0]['choices'],
                 'raw_compute_time': end_time - start_time
             }
             return return_payload
