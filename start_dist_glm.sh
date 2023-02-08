@@ -1,8 +1,7 @@
-cd /home/fm/dev/Quick_Deployment_HELM
-
+#!/bin/bash
 
 MODEL_TYPE="glm-130b"
-CHECKPOINT_PATH="/home/fm/models/glm-130b-sat"
+CHECKPOINT_PATH="/home/user/.together/models/glm"
 MP_SIZE=8
 SEED=1234
 MAX_OUTPUT_LENGTH=128
@@ -11,7 +10,6 @@ MIN_GEN_LENGTH=0
 TEMP=0.9
 TOPK=1
 TOPP=0
-
 
 MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --num-layers 70 \
@@ -33,9 +31,6 @@ MODEL_ARGS="--model-parallel-size ${MP_SIZE} \
             --temperature $TEMP \
             --top_k $TOPK \
             --top_p $TOPP"
-
-
-./together start &
 
 python3 -m torch.distributed.launch --nproc_per_node $MP_SIZE serving_dist_glm.py $MODEL_ARGS
 

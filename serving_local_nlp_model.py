@@ -180,8 +180,7 @@ if __name__ == "__main__":
                         help='hugging face model path (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
-    parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),
-                        help='group name for together coordinator.')
+    parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),help='group name for together coordinator.')
 
     args = parser.parse_args()
 
