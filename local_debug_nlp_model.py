@@ -33,6 +33,7 @@ def generate(task_info, device, model, tokenizer):
 
 
 def test_model(args):
+    print(f"<test_model> initialization start")
     device = torch.device('cuda', 0)
     assert args['model_path'] != ''
     model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'])
