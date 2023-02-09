@@ -72,4 +72,8 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', type=str, default='',
                         help='hugging face model path (used to load config).')
     args = parser.parse_args()
-    test_model(args)
+    test_model(args={
+        "hf_model_name": args.hf_model_name,
+        "model_path": args.model_path,
+        "interactive": True
+    })
