@@ -15,15 +15,19 @@ from model_utils import *
 import numpy as np
 import random
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
-        print(f"Model name: {model_name}")
-        print("\n=============== Arguments ===============")
-        print(args.keys())
-        print(args)
-        print("=========================================\n")
+        logging.debug(f"Model name: {model_name}")
+        logging.debug("\n=============== Arguments ===============")
+        logging.debug(args.keys())
+        logging.debug(args)
+        logging.debug("=========================================\n")
         self.task_info = {
             "seed": 0,
             "prompt_seqs": None,
@@ -48,10 +52,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.tokenizer = tokenizer
         torch.manual_seed(0)
         torch.cuda.empty_cache()
-        print(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
 
     def dispatch_request(self, args, env) -> Dict:
-        print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
@@ -89,16 +93,16 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "choices": inference_result[0]['choices'],
                 "raw_compute_time": 0.0
             }
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
+            logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
             return result
         else:
             result = self._run_inference()
             torch.cuda.empty_cache()
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
+            logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
             return result
 
     def _run_inference(self):
-        print(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
 
         with torch.no_grad():
             torch.manual_seed(self.task_info['seed'])
@@ -107,10 +111,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
             contexts = self.task_info["prompt_seqs"]
             inputs = self.tokenizer(contexts, return_tensors="pt").to(self.device)
-            print(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
+            logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
             input_length = inputs.input_ids.shape[1]
 
-            print(self.task_info)
+            logging.debug(self.task_info)
             output_scores = self.task_info["logprobs"] > 0
 
             time = timeit.default_timer()
@@ -139,7 +143,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
             time_elapsed = timeit.default_timer() - time
 
-        print(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+        logging.debug(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
 
         inference_result = []
         item = {'choices': [], }
@@ -148,9 +152,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                  token = outputs.sequences[beam_id, :]
             else:
                  token = outputs.sequences[beam_id, input_length:]  # exclude context input from the output
-            print(f"[INFO] raw token: {token}")
+            logging.debug(f"[INFO] raw token: {token}")
             output = self.tokenizer.decode(token)
-            print(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+            logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
             choice = {
                 "text": post_processing_text(output, self.task_info["stop"]),
                 "index": beam_id,
