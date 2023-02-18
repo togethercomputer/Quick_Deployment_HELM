@@ -1,30 +1,23 @@
 import os
 import sys
+import math
 import torch
 import timeit
+import random
+import logging
+import argparse
+import numpy as np
+from utils import *
+from model_utils import *
 from typing import Dict
+from torch.nn.utils.rnn import pad_sequence
+from transformers import AutoTokenizer, AutoConfig
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
-from transformers import AutoTokenizer, AutoConfig
-from torch.nn.utils.rnn import pad_sequence
-import argparse
-import logging
-from utils import *
-from model_utils import *
-import numpy as np
-import random
-import math
-
-import logging
 
 logger = logging.getLogger(__name__)
 # logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
-
-import logging
-
-logger = logging.getLogger(__name__)
-logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
@@ -251,7 +244,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     parser = argparse.ArgumentParser()
     parser.add_argument('--together_model_name', type=str, default=os.environ.get('SERVICE', 'Together-gpt-JT-6B-v1'),
                         help='worker name for together coordinator.')
@@ -282,6 +275,9 @@ if __name__ == "__main__":
         "model_path": args.model_path,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
-        "max_batch_size": args.max_batch_size
+        "max_batch_size": args.max_batch_size,
+        "gpu_num":1,
+        "gpu_type":"RTX 3090",
+        "gpu_mem":2400000
     })
     fip.start()
