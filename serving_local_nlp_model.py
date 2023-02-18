@@ -241,5 +241,6 @@ if __name__ == "__main__":
         "model_path": args.model_path,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
+        "max_batch_size": args.max_batch_size
     })
     fip.start()
