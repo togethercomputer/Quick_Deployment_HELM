@@ -19,7 +19,7 @@ import math
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
+# logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
