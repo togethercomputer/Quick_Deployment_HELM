@@ -44,11 +44,17 @@ def post_processing_text(output_text, stop_tokens):
 
 
 def convert_hf_score_to_logprobs(scores, k, tokenizer):
-    logprobs = []
-    for current_step_score in scores:
-        logging.debug("score shape: ", current_step_score.shape)
-        logging.debug("score max: ", current_step_score.max())
-        value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=-1), k)
-        current_logprob = list(zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist()))
-        logprobs.append(current_logprob)
-    return logprobs
+    results = []
+    batch_size = scores[0].shape[0]
+    print("<convert_hf_score_to_logprobs>: batch size: ")
+
+    for i in range(batch_size):
+        logprobs = []
+        for current_step_score in scores[i:i+1]:
+            print("score shape: ", current_step_score.shape)
+            print("score max: ", current_step_score.max())
+            value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=-1), k)
+            current_logprob = list(zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist()))
+            logprobs.append(current_logprob)
+        results.append(logprobs)
+    return results
