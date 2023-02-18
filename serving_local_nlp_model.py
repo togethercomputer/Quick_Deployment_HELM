@@ -16,15 +16,19 @@ import numpy as np
 import random
 import math
 
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
-        print(f"Model name: {model_name}")
-        print("\n=============== Arguments ===============")
-        print(args.keys())
-        print(args)
-        print("=========================================\n")
+        logging.debug(f"Model name: {model_name}")
+        logging.debug("\n=============== Arguments ===============")
+        logging.debug(args.keys())
+        logging.debug(args)
+        logging.debug("=========================================\n")
         self.task_info = {
             "seed": 0,
             "prompt_seqs": None,
@@ -50,10 +54,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.tokenizer = tokenizer
         torch.manual_seed(0)
         torch.cuda.empty_cache()
-        print(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
 
     def dispatch_request(self, args, env) -> Dict:
-        print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
@@ -63,7 +67,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         elif isinstance(str(args['prompt']), list):
             self.task_info["prompt_seqs"] = args['prompt']
         else:
-            print("wrong prompt format, it can only be str or list of str")
+            logging.debug("wrong prompt format, it can only be str or list of str")
             return
         self.task_info["output_len"] = get_int(args.get("max_tokens", 16), default=16)
         self.task_info["beam_width"] = get_int(args.get("beam_width", 1), default=1)
@@ -97,19 +101,19 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "choices": inference_result[0]['choices'],
                 "raw_compute_time": 0.0
             }
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
+            logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
             return result
         else:
             result = self._run_inference()
             torch.cuda.empty_cache()
-            print(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
+            logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
             return result
 
     def _run_inference(self):
-        print(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
+        logging.debug(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
 
         with torch.no_grad():
-            print(self.task_info)
+            logging.debug(self.task_info)
             torch.manual_seed(self.task_info['seed'])
             np.random.seed(self.task_info['seed'])
             random.seed(self.task_info['seed'])
@@ -117,7 +121,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             batch_size = min(len(complete_contexts), self.max_batch_size)
             num_iter = math.ceil(len(complete_contexts) / batch_size)
             output_buffer = []
-            print(self.task_info)
             output_scores = self.task_info["logprobs"] > 0
             if output_scores:
                 logprobs_buffer = []
@@ -128,7 +131,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             for iter_i in range(num_iter):
                 contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                 inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
-                print(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
+                logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                 input_length = inputs.input_ids.shape[1]
 
                 if self.task_info["temperature"] == 0:
@@ -155,7 +158,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 output_buffer.append(outputs)
             time_elapsed = timeit.default_timer() - time
 
-        print(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+        logging.debug(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
 
         if len(complete_contexts) == 1:
             item = {'choices': [], }
@@ -191,9 +194,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         else:
                             # exclude context input from the output
                             token = outputs.sequences[sample_id*beam_width+beam_id, input_length:]
-                        print(f"[INFO] raw token: {token}")
+                        logging.debug(f"[INFO] raw token: {token}")
                         output = self.tokenizer.decode(token)
-                        print(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                        logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
                             "text": post_processing_text(output, self.task_info["stop"]),
                             "index": beam_id,
