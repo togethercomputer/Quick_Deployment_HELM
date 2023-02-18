@@ -231,7 +231,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         choice = {
                             "text": post_processing_text(output, self.task_info["stop"]),
                             "index": beam_id,
-                            "finish_reason": "length"
+                            "finish_reason": "length"+str(sample_id)
                         }
                         item['choices'].append(choice)
             result = {
