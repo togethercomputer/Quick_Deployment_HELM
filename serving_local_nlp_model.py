@@ -21,6 +21,7 @@ import logging
 logger = logging.getLogger(__name__)
 # logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
+
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
@@ -207,7 +208,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             result = {
                 "result_type": RequestTypeLanguageModelInference,
                 "choices": inference_result,
-                "raw_compute_time": time_elapsed
+                "raw_compute_time": time_elapsed,
+                "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
             }
         if self.task_info["logprobs"] > 0:
             result['logprobs'] = logprobs

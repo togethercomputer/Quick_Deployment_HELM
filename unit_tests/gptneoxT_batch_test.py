@@ -1,6 +1,6 @@
 import requests
 
-prompt = ["Where is Zurich?", "Do you like football?", "Where is LA?", "Who is Bill Gates?", "Do you like tacos?"]
+prompt = ["Where is Zurich?", "Where is Zurich?"]
 top_p = 1.0
 temperature = 0.5
 max_new_tokens = 10
