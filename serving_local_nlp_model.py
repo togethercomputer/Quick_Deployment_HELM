@@ -111,13 +111,13 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
     def _run_inference(self):
         logging.debug(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
+        complete_contexts = self.task_info["prompt_seqs"]
 
         with torch.no_grad():
             logging.debug(self.task_info)
             torch.manual_seed(self.task_info['seed'])
             np.random.seed(self.task_info['seed'])
             random.seed(self.task_info['seed'])
-            complete_contexts = self.task_info["prompt_seqs"]
             batch_size = min(len(complete_contexts), self.max_batch_size)
             num_iter = math.ceil(len(complete_contexts) / batch_size)
             output_buffer = []
