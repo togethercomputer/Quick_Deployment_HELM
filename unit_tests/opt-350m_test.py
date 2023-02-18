@@ -1,9 +1,9 @@
 import requests
 
-prompt = "Where is Zurich?"
+prompt = ["Where is Zurich?", "Where is LA?"]
 top_p = 1.0
 temperature = 0.5
-max_new_tokens = 5
+max_new_tokens = 10
 
 
 my_post_dict = {

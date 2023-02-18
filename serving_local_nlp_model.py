@@ -183,6 +183,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "raw_compute_time": time_elapsed
             }
         else:
+            """
             inference_result = []
             for outputs in output_buffer:
                 beam_width = self.task_info["beam_width"]
@@ -209,8 +210,37 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "result_type": RequestTypeLanguageModelInference,
                 "choices": inference_result,
                 "raw_compute_time": time_elapsed,
-                "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
+                # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
             }
+            """
+            item = {'choices': [], }
+            for outputs in output_buffer:
+                beam_width = self.task_info["beam_width"]
+                current_batch_size = outputs.sequences.shape[0] // beam_width
+                for sample_id in range(current_batch_size):
+
+                    for beam_id in range(beam_width):
+                        if self.hf_model_name == "google/flan-t5-xxl":
+                            token = outputs.sequences[sample_id * beam_width + beam_id, :]
+                        else:
+                            # exclude context input from the output
+                            token = outputs.sequences[sample_id * beam_width + beam_id, input_length:]
+                        logging.debug(f"[INFO] raw token: {token}")
+                        output = self.tokenizer.decode(token)
+                        logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                        choice = {
+                            "text": post_processing_text(output, self.task_info["stop"]),
+                            "index": beam_id,
+                            "finish_reason": "length"
+                        }
+                        item['choices'].append(choice)
+            result = {
+                "result_type": RequestTypeLanguageModelInference,
+                "choices": item['choices'],
+                "raw_compute_time": time_elapsed,
+                # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
+            }
+
         if self.task_info["logprobs"] > 0:
             result['logprobs'] = logprobs
         return result
