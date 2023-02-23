@@ -231,6 +231,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             "finish_reason": "length"+str(sample_id)
                         }
                         item['choices'].append(choice)
+                        
             result = {
                 "result_type": RequestTypeLanguageModelInference,
                 "choices": item['choices'],
