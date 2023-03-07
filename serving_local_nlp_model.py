@@ -45,9 +45,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         if args['model_path'] != '':
-            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'])
+            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
         else:
-            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'])
+            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
         torch.manual_seed(0)
@@ -261,6 +261,8 @@ if __name__ == "__main__":
                         help='batch inference, the max batch for .')
     parser.add_argument('--device', type=str, default="cuda",
                         help='device.')
+    parser.add_argument('--dtype', type=str, default="",
+                        help='dtype.')
     args = parser.parse_args()
 
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
