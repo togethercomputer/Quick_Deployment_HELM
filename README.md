@@ -1,5 +1,7 @@
 # Quick_Deployment_HELM
 
+To deploy a new docker image, merge a PR to the main branch.
+
 To bring up a standalone node:
 
 ```console
