@@ -21,3 +21,9 @@ docker run --rm --gpus device=2 \
  --config /home/user/cfg-neoxt.yaml --color \
  --worker.service SafetyTest --worker.model gpt-jt-safety
 ```
+
+Start opt-350m in CPU on laptop:
+
+```console
+together-node start --config Quick_Deployment_HELM/cfg-opt-350m-docker.yaml
+```

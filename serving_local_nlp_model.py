@@ -41,7 +41,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "stop": [],
             "logprobs": 0,
         }
-        self.device = torch.device('cuda', 0)
+        self.device = args['device']
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         if args['model_path'] != '':
@@ -259,6 +259,8 @@ if __name__ == "__main__":
                         help='group name for together coordinator.')
     parser.add_argument('--max_batch_size', type=int, default=8,
                         help='batch inference, the max batch for .')
+    parser.add_argument('--device', type=str, default="cuda",
+                        help='device.')
     args = parser.parse_args()
 
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
@@ -272,6 +274,7 @@ if __name__ == "__main__":
     )
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
+        "device": args.device,
         "hf_model_name": args.hf_model_name,
         "model_path": args.model_path,
         "worker_name": args.worker_name,
