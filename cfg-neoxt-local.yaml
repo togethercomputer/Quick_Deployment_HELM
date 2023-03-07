@@ -1,0 +1,7 @@
+worker:
+  mode: local-service
+  model_url: https://together-modelhub.s3.us-west-2.amazonaws.com/{{.MODEL}}
+  group:
+    alloc: each
+  command: /opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --hf_model_name Together/gpt-neoxT-20b --model_path /home/user/.together/models/{{.MODEL}}
+  env: HF_HOME=/home/user/.together/models

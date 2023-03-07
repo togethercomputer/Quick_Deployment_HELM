@@ -82,6 +82,24 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
                 model, model_path, device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
             )
             tokenizer = AutoTokenizer.from_pretrained("facebook/galactica-120b")
+    elif model_name == "facebook/opt-iml-175b-max":
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config)
+            # state_dict = torch.load(model_path+'/opt-iml-max.pt')
+            # model.load_state_dict(state_dict)
+            model = load_checkpoint_and_dispatch(
+                model, model_path+'/opt-iml-max.pt', device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
+            )
+            tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
+    elif model_name == "facebook/opt-iml-175b-regular":
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config)
+            model = load_checkpoint_and_dispatch(
+                model, model_path+'/opt-iml-regular.pt', device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
+            )
+            tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
     else:
         assert False, f"Not legal name {model_name}"
     print(f"<get_dist_accelerate_tokenizer_model>: {model_name} hf_device_map")
