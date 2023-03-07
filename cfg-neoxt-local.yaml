@@ -1,0 +1,6 @@
+worker:
+  mode: local-service
+  group:
+    alloc: each
+  command: /opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --hf_model_name Together/gpt-neoxT-20b --model_path /root/.together/models/{{.MODEL}}
+  env: HF_HOME=/root/.together/models
