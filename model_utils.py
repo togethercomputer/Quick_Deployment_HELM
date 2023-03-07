@@ -1,7 +1,9 @@
 import torch
 from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
+import logging
 
+logger = logging.getLogger(__name__)
 
 def get_local_huggingface_tokenizer_model(model_name, model_path=None):
     if model_name.startswith('Salesforce/codegen'):
@@ -56,6 +58,10 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
             model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
         else:
             assert False
+    elif model_path is not None and model_path != "":
+        logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
     else:
         assert False, "Model not supported yet."
 
