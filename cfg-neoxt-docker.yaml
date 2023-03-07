@@ -1,0 +1,13 @@
+worker:
+  workers: 1
+  mode: docker-service
+  image: togethercomputer/native_hf_models
+  group:
+    alloc: each
+  gpu:
+    type: cuda
+    alloc: each
+  network:
+    mode: host
+  command: /opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --hf_model_name Together/gpt-neoxT-20b --model_path /root/.together/models/{{.MODEL}}
+  env: HF_HOME=/root/.together/models
