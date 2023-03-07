@@ -2,6 +2,7 @@ worker:
   workers: 1
   mode: docker-service
   image: togethercomputer/native_hf_models
+  model_url: https://together-modelhub.s3.us-west-2.amazonaws.com/{{.MODEL}}
   group:
     alloc: each
   gpu:
