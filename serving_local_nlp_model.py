@@ -19,6 +19,18 @@ from together_web3.together import TogetherWeb3, TogetherClientOptions
 logger = logging.getLogger(__name__)
 # logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
+def translate_chatml_to_openchat(prompt):
+    prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
+    prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
+    prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
+    prompt = prompt.replace('<|im_start|>user', '<human>:')
+    prompt = prompt.replace('<|im_start|>assistant', '<bot>:')
+    prompt = prompt.replace('\n<|im_end|>', '')
+    prompt = prompt.replace('<|im_end|>', '')
+    prompt = prompt.rstrip()
+    # print(prompt)
+    return prompt
+
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
@@ -131,6 +143,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             time = timeit.default_timer()
             for iter_i in range(num_iter):
                 contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
+                # Do translation
+                contextstranslate_chatml_to_openchat(contexts)
                 inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
                 logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                 input_length = inputs.input_ids.shape[1]
@@ -173,7 +187,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 output = self.tokenizer.decode(token)
                 logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                 choice = {
-                    "text": post_processing_text(output, self.task_info["stop"]),
+                    "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>']),
                     "index": beam_id,
                     "finish_reason": "length"
                 }
@@ -230,7 +244,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output = self.tokenizer.decode(token)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
-                            "text": post_processing_text(output, self.task_info["stop"]),
+                            "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>']),
                             "index": beam_id,
                             "finish_reason": "length"+str(sample_id)
                         }
