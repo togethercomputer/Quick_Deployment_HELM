@@ -144,7 +144,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             for iter_i in range(num_iter):
                 contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                 # Do translation
-                contextstranslate_chatml_to_openchat(contexts)
+                contexts = [translate_chatml_to_openchat(context) for context in contexts]
                 inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
                 logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                 input_length = inputs.input_ids.shape[1]
