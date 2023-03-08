@@ -144,7 +144,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             for iter_i in range(num_iter):
                 contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                 # Do translation
-                contextstranslate_chatml_to_openchat(contexts)
+                contexts = [translate_chatml_to_openchat(context) for context in contexts]
                 inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
                 logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                 input_length = inputs.input_ids.shape[1]
@@ -171,7 +171,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=False,  # return embeddings
-                        stream_tokens=self.task_info.get("stream_tokens")
                     )
                 if output_scores:
                     logprobs = convert_hf_score_to_logprobs(outputs.scores, self.task_info["logprobs"], self.tokenizer)
