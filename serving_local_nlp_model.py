@@ -171,7 +171,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=False,  # return embeddings
-                        stream_tokens=self.task_info.get("stream_tokens")
                     )
                 if output_scores:
                     logprobs = convert_hf_score_to_logprobs(outputs.scores, self.task_info["logprobs"], self.tokenizer)
