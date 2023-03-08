@@ -17,7 +17,7 @@ from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
 
 logger = logging.getLogger(__name__)
-# logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
+logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 def translate_chatml_to_openchat(prompt):
     prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
@@ -153,6 +153,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     outputs = self.model.generate(
                         **inputs, do_sample=True, top_p=self.task_info['top_p'],
                         temperature=1.0, top_k=1,
+                        repetition_penalty=self.task_info['repetition_penalty'],
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
@@ -160,7 +161,11 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     )
                 else:
                     outputs = self.model.generate(
-                        **inputs, do_sample=True, top_p=self.task_info['top_p'],
+                        **inputs, 
+                        do_sample=True, 
+                        top_p=self.task_info['top_p'],
+                        top_k=self.task_info['top_k'],
+                        repetition_penalty=self.task_info['repetition_penalty'],
                         temperature=self.task_info["temperature"],
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
