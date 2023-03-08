@@ -58,3 +58,12 @@ def convert_hf_score_to_logprobs(scores, k, tokenizer):
             logprobs.append(current_logprob)
         results.append(logprobs)
     return results
+
+
+def torch_dtype_from_dtype(dtype: str) -> torch.dtype:
+    if dtype == "fp16":
+        return torch.float16
+    elif dtype == "bf16":
+        return torch.bfloat16
+    else:
+        return torch.float32

@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def get_local_huggingface_tokenizer_model(model_name, model_path=None):
+def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=None):
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if model_path is not None:
@@ -15,7 +15,7 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None):
             model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float16)
     elif model_name == 'facebook/opt-350m':
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
-        model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=torch.float16)
+        model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=(dtype if dtype else torch.float16))
     elif model_name == 'google/flan-t5-xxl':
         tokenizer = T5Tokenizer.from_pretrained(model_name)
         if model_path is not None:
