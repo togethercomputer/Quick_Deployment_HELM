@@ -82,6 +82,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["stop"] = args.get("stop", [])
         self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
 
+        if args.get("stream_tokens"):
+            self.task_info["stream_tokens"] = lambda token: self.stream_tokens(token, env)
+
         if len(self.task_info["prompt_seqs"][0]) == 0 or self.task_info["output_len"] == 0:
             inference_result = []
             item = {'choices': [], }
@@ -149,6 +152,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=False,  # return embeddings
+                        stream_tokens=self.task_info.get("stream_tokens")
                     )
                 if output_scores:
                     logprobs = convert_hf_score_to_logprobs(outputs.scores, self.task_info["logprobs"], self.tokenizer)
@@ -277,6 +281,7 @@ if __name__ == "__main__":
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
+        "dtype": torch_dtype_from_dtype(args.dtype) if args.dtype else None,
         "hf_model_name": args.hf_model_name,
         "model_path": args.model_path,
         "worker_name": args.worker_name,
