@@ -134,6 +134,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             batch_size = min(len(complete_contexts), self.max_batch_size)
             num_iter = math.ceil(len(complete_contexts) / batch_size)
             output_buffer = []
+            logprobs_buffer = []
             output_scores = self.task_info["logprobs"] > 0
             if output_scores:
                 logprobs_buffer = []
@@ -151,13 +152,11 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
                 if self.task_info["temperature"] == 0:
                     outputs = self.model.generate(
-                        **inputs, do_sample=True, top_p=self.task_info['top_p'],
-                        temperature=1.0, top_k=1,
-                        repetition_penalty=self.task_info['repetition_penalty'],
+                        **inputs, do_sample=False, 
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
-                        output_hidden_states=False,  # return embeddings
+                        output_hidden_states=True,  # return embeddings
                     )
                 else:
                     outputs = self.model.generate(
@@ -170,11 +169,45 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
-                        output_hidden_states=False,  # return embeddings
+                        output_hidden_states=True,  # return embeddings
                     )
                 if output_scores:
-                    logprobs = convert_hf_score_to_logprobs(outputs.scores, self.task_info["logprobs"], self.tokenizer)
-                    logprobs_buffer.extend(logprobs)
+                    ### hard code, assume bsz==1
+                    n_logprobs = self.task_info["logprobs"]
+    
+                    # sampled tokens
+                    token_ids = outputs.sequences[0, inputs['input_ids'].size(1):].tolist()
+                    tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+
+                    logprobs_dict = {
+                        'tokens': tokens,
+                        'token_logprobs': [],
+                        'top_logprobs': [],
+                    }
+
+                    # last layer hidden states
+                    hids = [outputs.hidden_states[0][-1][:, -1:]]
+                    hids += [hid[-1] for hid in outputs.hidden_states[1:]]
+                    hids = torch.cat(hids, dim=1)
+                    # origianl logits
+                    logits = self.model.get_output_embeddings()(hids)
+                    logprobs = logits.log_softmax(-1)
+                    values, indices = logprobs.topk(n_logprobs, dim=-1)
+
+                    for i in range(indices.size(1)):
+                        selected_token_id = token_ids[i]
+                        # topk tokens
+                        tokens = self.tokenizer.convert_ids_to_tokens(indices[0, i])
+                        # topk scores
+                        scores = values[0, i].tolist()
+
+                        logprobs_dict['token_logprobs'].append(logprobs[0, i, selected_token_id].item())
+                        logprobs_dict['top_logprobs'].append({
+                            t: s for t,s in zip(tokens, scores)
+                        })
+                        
+                    logprobs_buffer.append(logprobs_dict)
+                    
                 output_buffer.append(outputs)
             time_elapsed = timeit.default_timer() - time
 
@@ -195,6 +228,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     "index": beam_id,
                     "finish_reason": "length"
                 }
+                if output_scores:
+                    choice['logprobs'] = logprobs_buffer[0]
                 item['choices'].append(choice)
             result = {
                 "result_type": RequestTypeLanguageModelInference,
@@ -233,7 +268,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             }
             """
             item = {'choices': [], }
-            for outputs in output_buffer:
+            for i_output, outputs in enumerate(output_buffer):
                 beam_width = self.task_info["beam_width"]
                 current_batch_size = outputs.sequences.shape[0] // beam_width
                 for sample_id in range(current_batch_size):
@@ -252,6 +287,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             "index": beam_id,
                             "finish_reason": "length"+str(sample_id)
                         }
+                        if output_scores:
+                            choice['logprobs'] = logprobs_buffer[i_output]
                         item['choices'].append(choice)
                         
             result = {
