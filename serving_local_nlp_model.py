@@ -298,8 +298,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
             }
 
-        if self.task_info["logprobs"] > 0:
-            result['logprobs'] = logprobs
+        #if self.task_info["logprobs"] > 0:
+        #    result['logprobs'] = logprobs
         return result
 
 
