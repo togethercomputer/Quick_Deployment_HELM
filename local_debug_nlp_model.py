@@ -14,7 +14,7 @@ def generate(task_info, device, model, tokenizer):
             temperature=1.0, top_k=1,
             max_new_tokens=task_info["output_len"],
             return_dict_in_generate=True,
-            output_scores=False,  # return logit score
+            output_scores=True,  # return logit score
             output_hidden_states=False,  # return embeddings
         )
     else:
@@ -23,9 +23,10 @@ def generate(task_info, device, model, tokenizer):
             temperature=task_info["temperature"],
             max_new_tokens=task_info["output_len"],
             return_dict_in_generate=True,
-            output_scores=False,  # return logit score
+            output_scores=True,  # return logit score
             output_hidden_states=False,  # return embeddings
         )
+    print(f"[INFO] raw output: {outputs}")
     token = outputs.sequences[0, input_length:]  # exclude context input from the output
     print(f"[INFO] raw token: {token}")
     output = tokenizer.decode(token)
@@ -53,7 +54,7 @@ def test_model(args):
         "len_penalty": 0,
         "repetition_penalty": 1.0,
         "stop": [],
-        "logprobs": 0,
+        "logprobs": 5,
     }
     print(f"<test_model> initialization done")
 
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
-    parser.add_argument('--model_path', type=str, default='',
+    parser.add_argument('--model_path', type=str, default='~/models/opt-350m',
                         help='hugging face model path (used to load config).')
     args = parser.parse_args()
     test_model(args={
