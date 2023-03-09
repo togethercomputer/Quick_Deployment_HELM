@@ -19,7 +19,7 @@ def get_float(input_: str, default=0.0) -> float:
         return default
 
 
-def post_processing_text(output_text, stop_tokens, blacklist_words = []):
+def post_processing_text(output_text, stop_tokens, denylist = []):
     logging.debug(f"<post_processing_text> output_text: {output_text}")
 
     filtered_stop_tokens = []
@@ -40,9 +40,9 @@ def post_processing_text(output_text, stop_tokens, blacklist_words = []):
     post_processed_text = output_text[:end_pos]
     logging.debug(f"<post_processing_text> input: {output_text}")
     logging.debug(f"<post_processing_text> output: {post_processed_text}")
-    for word in blacklist_words:
+    for word in denylist:
         if post_processed_text.find(word) != -1:
-            logging.debug(f"<post_processing_text> blacklist word {word} found, set to empty.")
+            logging.debug(f"<post_processing_text> denylist word {word} found, set to empty.")
             post_processed_text = "I'm sorry, but I cannot respond to that."
     return post_processed_text
 

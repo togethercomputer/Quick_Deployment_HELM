@@ -57,7 +57,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.device = args['device']
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
-        self.black_list = args['black_list']
+        self.deny_list = args['deny_list']
         if args['model_path'] != '':
             model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
         else:
@@ -226,7 +226,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 output = self.tokenizer.decode(token)
                 logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                 choice = {
-                    "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.black_list),
+                    "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.deny_list),
                     "index": beam_id,
                     "finish_reason": "length"
                 }
@@ -256,7 +256,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output = self.tokenizer.decode(token)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
-                            "text": post_processing_text(output, self.task_info["stop"], self.black_list),
+                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
                             "index": beam_id,
                             "finish_reason": "length"
                         }
@@ -285,7 +285,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output = self.tokenizer.decode(token)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
-                            "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.black_list),
+                            "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.deny_list),
                             "index": beam_id,
                             "finish_reason": "length"+str(sample_id)
                         }
@@ -330,10 +330,10 @@ if __name__ == "__main__":
     coord_http_port = os.environ.get("COORD_HTTP_PORT", "8092")
     coord_ws_port = os.environ.get("COORD_WS_PORT", "8093")
     try:
-        black_list = json.loads(os.environ.get("BLACK_LIST", "[]"))
+        deny_list = json.loads(os.environ.get("DENY_LIST", "[]"))
     except Exception as e:
         logging.error(f"failed to parse black list: {e}")
-        black_list = []
+        deny_list = []
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
         http_url=f"http://{coord_url}:{coord_http_port}",
@@ -351,6 +351,6 @@ if __name__ == "__main__":
         "gpu_num":1,
         "gpu_type":"RTX 3090",
         "gpu_mem":2400000,
-        "black_list": black_list
+        "deny_list": deny_list
     })
     fip.start()
