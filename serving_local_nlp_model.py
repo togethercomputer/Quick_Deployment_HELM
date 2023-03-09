@@ -159,6 +159,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=True,  # return embeddings
+                        stream_tokens=self.task_info.get("stream_tokens"),
                     )
                 else:
                     outputs = self.model.generate(
@@ -172,6 +173,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=True,  # return embeddings
+                        stream_tokens=self.task_info.get("stream_tokens"),
                     )
                 if output_scores:
                     ### hard code, assume bsz==1
@@ -226,7 +228,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 output = self.tokenizer.decode(token)
                 logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                 choice = {
-                    "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.deny_list),
+                    "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
                     "index": beam_id,
                     "finish_reason": "length"
                 }
@@ -285,7 +287,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output = self.tokenizer.decode(token)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
-                            "text": post_processing_text(output, self.task_info["stop"] + ['\n<human>'], self.deny_list),
+                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
                             "index": beam_id,
                             "finish_reason": "length"+str(sample_id)
                         }
