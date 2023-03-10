@@ -1,5 +1,7 @@
 import argparse
 from model_utils import *
+from transformers import StoppingCriteriaList
+from utils import StopWordsCriteria
 
 
 def generate(task_info, device, model, tokenizer):
@@ -25,6 +27,7 @@ def generate(task_info, device, model, tokenizer):
             return_dict_in_generate=True,
             output_scores=True,  # return logit score
             output_hidden_states=False,  # return embeddings
+            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(task_info["stop"], tokenizer)]) if task_info.get("stop") else None,
         )
     print(f"[INFO] raw output: {outputs}")
     token = outputs.sequences[0, input_length:]  # exclude context input from the output
@@ -35,9 +38,9 @@ def generate(task_info, device, model, tokenizer):
 
 def test_model(args):
     print(f"<test_model> initialization start")
-    device = torch.device('cuda', 0)
+    device = torch.device(args.get('device', 'cuda'))
     assert args['model_path'] != ''
-    model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'])
+    model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
     model = model.to(device)
     tokenizer = tokenizer
     torch.manual_seed(0)
@@ -53,7 +56,7 @@ def test_model(args):
         "temperature": 0.8,
         "len_penalty": 0,
         "repetition_penalty": 1.0,
-        "stop": [],
+        "stop": args.get("stop", []),
         "logprobs": 5,
     }
     print(f"<test_model> initialization done")
@@ -77,5 +80,8 @@ if __name__ == "__main__":
     test_model(args={
         "hf_model_name": args.hf_model_name,
         "model_path": args.model_path,
-        "interactive": True
+        "interactive": True,
+        # "stop": ["pioneering"],
+        # "device": "cpu",
+        # "dtype": torch.float32,
     })

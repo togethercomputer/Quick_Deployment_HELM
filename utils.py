@@ -1,5 +1,8 @@
 import torch
+import timeit
 import logging
+from transformers import StoppingCriteria
+
 
 def get_int(input_: str, default=0) -> int:
     try:
@@ -10,6 +13,20 @@ def get_int(input_: str, default=0) -> int:
         return default
 
 
+class StopWordsCriteria(StoppingCriteria):
+    def __init__(self, stop_words, tokenizer):
+        self.tokenizer = tokenizer
+        self.stop_words = stop_words
+        self._cache_str = ''
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        self._cache_str += self.tokenizer.decode(input_ids[0, -1])
+        for stop_words in self.stop_words:
+            if stop_words in self._cache_str:
+                return True
+        return False
+
+
 def get_float(input_: str, default=0.0) -> float:
     try:
         my_num = float(input_)
@@ -17,7 +34,6 @@ def get_float(input_: str, default=0.0) -> float:
     except ValueError:
         logging.debug(f'Invalid float {input_} set to default: {default}')
         return default
-
 
 def post_processing_text(output_text, stop_tokens, denylist = []):
     logging.debug(f"<post_processing_text> output_text: {output_text}")
@@ -40,10 +56,15 @@ def post_processing_text(output_text, stop_tokens, denylist = []):
     post_processed_text = output_text[:end_pos]
     logging.debug(f"<post_processing_text> input: {output_text}")
     logging.debug(f"<post_processing_text> output: {post_processed_text}")
+    start = timeit.default_timer()
     for word in denylist:
         if post_processed_text.find(word) != -1:
-            logging.debug(f"<post_processing_text> denylist word {word} found, set to empty.")
-            post_processed_text = "I'm sorry, but I cannot respond to that."
+            print(f"<post_processing_text> post_processed_text: {post_processed_text}")
+            print(f"<post_processing_text> denylist word {word} found, set to empty.")
+            post_processed_text = "Sorry, I'm not sure how to answer that question."
+            break
+    stop = timeit.default_timer()
+    print(f"<post_processing_text> time: {stop - start}")
     return post_processed_text
 
 

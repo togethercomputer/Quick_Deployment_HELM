@@ -28,14 +28,26 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install alpa && \
     pip3 install jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
     pip3 install together_worker && \
-    pip3 install accelerate && \
-    pip3 install "transformers<=4.23.1" fastapi uvicorn omegaconf jinja2  && \
+    git clone https://github.com/togethercomputer/transformers_port && \
+    cd transformers_port && pip install . && cd .. && rm -rf transformers_port && \
+    pip3 install fastapi uvicorn omegaconf jinja2 einops && \
     pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113  && \
+    pip3 install flash-attn && \
     cd /build && \
     git clone https://github.com/alpa-projects/alpa.git && \
     cd alpa/examples && \
     pip3 install -e . && \
+    pip3 install sentencepiece && \
+    pip3 install accelerate && \
     echo "conda activate alpa" >> ~/.bashrc
 
+RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
+    chmod +x /usr/local/bin/together-node
+COPY cfg-neoxt-local.yaml /home/user/cfg-neoxt.yaml
 ENV PATH /opt/conda/condabin/conda/bin:$PATH
+ENV HOME=/home/user
+ENV PYTHONUNBUFFERED=1
 
+RUN mkdir -p /app
+COPY . /app
+WORKDIR /app
