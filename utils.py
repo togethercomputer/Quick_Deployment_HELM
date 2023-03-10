@@ -1,6 +1,6 @@
 import torch
 import logging
-
+import timeit
 def get_int(input_: str, default=0) -> int:
     try:
         my_num = int(input_)
@@ -40,12 +40,15 @@ def post_processing_text(output_text, stop_tokens, denylist = []):
     post_processed_text = output_text[:end_pos]
     logging.debug(f"<post_processing_text> input: {output_text}")
     logging.debug(f"<post_processing_text> output: {post_processed_text}")
+    start = timeit.default_timer()
     for word in denylist:
         if post_processed_text.find(word) != -1:
             print(f"<post_processing_text> post_processed_text: {post_processed_text}")
             print(f"<post_processing_text> denylist word {word} found, set to empty.")
             post_processed_text = "Sorry, I'm not sure how to answer that question."
             break
+    stop = timeit.default_timer()
+    print(f"<post_processing_text> time: {stop - start}")
     return post_processed_text
 
 
