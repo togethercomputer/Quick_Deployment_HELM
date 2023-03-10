@@ -1,5 +1,33 @@
 import torch
 import logging
+from transformers import StoppingCriteria
+
+
+def list_ends_with(haystack, needle):
+    if len(haystack) < len(needle):
+        return False
+    for i in range(len(needle)):
+        if haystack[-1-i] != needle[-1-i]:
+            return False
+    return True
+
+
+class StopWordsCriteria(StoppingCriteria):
+    def __init__(self, stop_words, tokenizer):
+        self.stop_ids = []
+        for stop_word in stop_words:
+            self.stop_ids.append(tokenizer(stop_word).input_ids)
+        print("stop_ids", self.stop_ids)
+
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        output_ids = input_ids.tolist()[0]
+        for stop_ids in self.stop_ids:
+            print("check if ends with", stop_ids, output_ids)
+            if list_ends_with(output_ids, stop_ids):
+                print("stopping!!!!")
+                return True
+        return False
+
 
 def get_int(input_: str, default=0) -> int:
     try:

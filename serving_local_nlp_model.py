@@ -12,7 +12,7 @@ from utils import *
 from model_utils import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
-from transformers import AutoTokenizer, AutoConfig
+from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
@@ -174,6 +174,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=True,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
+                        stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                     )
                 if output_scores:
                     ### hard code, assume bsz==1
