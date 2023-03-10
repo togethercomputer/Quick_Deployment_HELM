@@ -3,6 +3,7 @@ import timeit
 import logging
 from transformers import StoppingCriteria
 
+
 def get_int(input_: str, default=0) -> int:
     try:
         my_num = int(input_)
@@ -11,28 +12,20 @@ def get_int(input_: str, default=0) -> int:
         logging.debug(f'Invalid int {input_} set to default: {default}')
         return default
 
-def list_ends_with(haystack, needle):
-    if len(haystack) < len(needle):
-        return False
-    for i in range(len(needle)):
-        if haystack[-1-i] != needle[-1-i]:
-            return False
-    return True
 
 class StopWordsCriteria(StoppingCriteria):
     def __init__(self, stop_words, tokenizer):
         self.tokenizer = tokenizer
         self.stop_words = stop_words
-        print("stop_words", self.stop_words)
         self._cache_str = ''
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
         self._cache_str += self.tokenizer.decode(input_ids[0, -1])
         for stop_words in self.stop_words:
             if stop_words in self._cache_str:
-                print("stopping!!!!")
                 return True
         return False
+
 
 def get_float(input_: str, default=0.0) -> float:
     try:

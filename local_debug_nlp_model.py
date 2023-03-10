@@ -43,10 +43,6 @@ def test_model(args):
     model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
     model = model.to(device)
     tokenizer = tokenizer
-
-    print("test-1", tokenizer.decode([642, 8525, 2961]))
-    print("test-2", tokenizer.decode([22653, ]))
-
     torch.manual_seed(0)
     torch.cuda.empty_cache()
     task_info = {
@@ -85,7 +81,7 @@ if __name__ == "__main__":
         "hf_model_name": args.hf_model_name,
         "model_path": args.model_path,
         "interactive": True,
-        "stop": ["pioneering"],
-        "device": "cpu",
-        "dtype": torch.float32,
+        # "stop": ["pioneering"],
+        # "device": "cpu",
+        # "dtype": torch.float32,
     })
