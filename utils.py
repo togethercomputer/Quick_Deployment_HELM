@@ -42,8 +42,10 @@ def post_processing_text(output_text, stop_tokens, denylist = []):
     logging.debug(f"<post_processing_text> output: {post_processed_text}")
     for word in denylist:
         if post_processed_text.find(word) != -1:
-            logging.debug(f"<post_processing_text> denylist word {word} found, set to empty.")
+            print(f"<post_processing_text> post_processed_text: {post_processed_text}")
+            print(f"<post_processing_text> denylist word {word} found, set to empty.")
             post_processed_text = "I'm sorry, but I cannot respond to that."
+            break
     return post_processed_text
 
 

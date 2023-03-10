@@ -18,6 +18,7 @@ from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
 
 logger = logging.getLogger(__name__)
+
 logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 def translate_chatml_to_openchat(prompt):
@@ -340,10 +341,9 @@ if __name__ == "__main__":
         deny_list_file = os.environ.get("DENY_LIST_FILE", "")
         if deny_list_file != None:
             with open(deny_list_file, "r") as f:
-                deny_list = f.readlines()
+                deny_list = [line.strip() for line in f.readlines()]
     except Exception as e:
         logging.error(f"failed to parse deny list file: {e}")
-
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
         http_url=f"http://{coord_url}:{coord_http_port}",
