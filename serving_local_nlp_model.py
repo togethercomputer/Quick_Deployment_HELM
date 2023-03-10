@@ -331,11 +331,19 @@ if __name__ == "__main__":
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
     coord_http_port = os.environ.get("COORD_HTTP_PORT", "8092")
     coord_ws_port = os.environ.get("COORD_WS_PORT", "8093")
+    deny_list = []
     try:
         deny_list = json.loads(os.environ.get("DENY_LIST", "[]"))
     except Exception as e:
-        logging.error(f"failed to parse black list: {e}")
-        deny_list = []
+        logging.error(f"failed to parse deny list: {e}")
+    try:
+        deny_list_file = os.environ.get("DENY_LIST_FILE", "")
+        if deny_list_file != None:
+            with open(deny_list_file, "r") as f:
+                deny_list = f.readlines()
+    except Exception as e:
+        logging.error(f"failed to parse deny list file: {e}")
+
     coordinator = TogetherWeb3(
         TogetherClientOptions(reconnect=True),
         http_url=f"http://{coord_url}:{coord_http_port}",
