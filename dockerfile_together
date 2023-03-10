@@ -28,7 +28,6 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install alpa && \
     pip3 install jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
     pip3 install together_worker && \
-    pip3 install flash-attn && \
     git clone https://github.com/togethercomputer/transformers_port && \
     cd transformers_port && pip install . && cd .. && rm -rf transformers_port && \
     pip3 install fastapi uvicorn omegaconf jinja2 einops && \
