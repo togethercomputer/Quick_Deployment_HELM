@@ -11,4 +11,4 @@ worker:
   network:
     mode: host
   command: /opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --hf_model_name Together/gpt-neoxT-20b --model_path /home/user/.together/models/{{.MODEL}}
-  env: HF_HOME=/home/user/.together/models
+  env: HF_HOME=/home/user/.together/models DENY_LIST_FILE=/app/safety/safety.txt
