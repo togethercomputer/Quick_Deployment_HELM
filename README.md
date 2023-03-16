@@ -12,6 +12,17 @@ docker run --pull=always --rm --gpus device=2 \
  --worker.service OpenChatTest --worker.model gpt-neoxt-v0.15
 ```
 
+To bring up a standalone node with retrieval:
+
+```console
+docker run --pull=always --rm --gpus device=2 \
+ --add-host=host.docker.internal:host-gateway \
+ -v $PWD/.together:/home/user/.together \
+ -it togethercomputer/native_hf_models /usr/local/bin/together-node start \
+ --config /home/user/cfg-neoxt-retrieval.yaml --color \
+ --worker.service OpenChatFaiss --worker.model gpt-neoxt-v0.15
+```
+
 To bring up a standalone safety model:
 
 ```console
