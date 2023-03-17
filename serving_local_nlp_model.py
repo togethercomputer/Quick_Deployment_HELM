@@ -124,14 +124,14 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             }
             logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
             if self.plugin:
-                return self.plugin.result(result, plugin_state)
+                return self.plugin.response(result, plugin_state)
             return result
         else:
             result = self._run_inference()
             torch.cuda.empty_cache()
             logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
             if self.plugin:
-                return self.plugin.result(result, plugin_state)
+                return self.plugin.response(result, plugin_state)
             return result
 
     def _run_inference(self):
