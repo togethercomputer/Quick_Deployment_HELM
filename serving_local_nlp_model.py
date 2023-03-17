@@ -377,6 +377,7 @@ if __name__ == "__main__":
         "gpu_num":1,
         "gpu_type":"RTX 3090",
         "gpu_mem":2400000,
-        "deny_list": deny_list
+        "deny_list": deny_list,
+        "plugin": plugin,
     })
     fip.start()

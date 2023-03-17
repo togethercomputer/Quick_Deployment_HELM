@@ -20,7 +20,7 @@ docker run --pull=always --rm --gpus device=2 \
  -v $PWD/.together:/home/user/.together \
  -it togethercomputer/native_hf_models /usr/local/bin/together-node start \
  --config /home/user/cfg-neoxt-retrieval.yaml --color \
- --worker.service OpenChatFaiss --worker.model gpt-neoxt-v0.15
+ --worker.service ock-faiss --worker.model gpt-neoxt-v0.15
 ```
 
 To bring up a standalone safety model:
