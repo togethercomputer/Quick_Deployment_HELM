@@ -2,7 +2,7 @@ import requests
 
 class FaissRetrievalPlugin():
     def __init__(self, url="http://host.docker.internal:5001"):
-        print("FaissRetrievalPlugin init")
+        print("FaissRetrievalPlugin init", url)
         self.url = url
 
     def request(self, args, env, state):
