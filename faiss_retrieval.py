@@ -6,15 +6,15 @@ class FaissRetrievalPlugin():
         self.url = url
 
     def request(self, args, env, state):
+        # print("FaissRetrievalPlugin request", args)
         req = { "prompt": args[0]["prompt"] }
-        print("FaissRetrievalPlugin request", req)
         result = requests.post(self.url, json=req).json()
         choice = result["data"]["choices"][0]
         state["passage"] = choice["passage"]
         args[0]["prompt"] = choice["text"]
 
     def response(self, result, state):
-        print("FaissRetrievalPlugin response", result)
+        # print("FaissRetrievalPlugin response", result)
         passage = state["passage"]
         choice = result["choices"][0]
         res = choice["text"]
