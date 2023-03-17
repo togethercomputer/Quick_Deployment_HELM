@@ -18,5 +18,5 @@ class FaissRetrievalPlugin():
         passage = state["passage"]
         choice = result["choices"][0]
         res = choice["text"]
-        choice["text"] = f"\n\"{passage}\"\n\nAnswer: \n{res}"
+        choice["text"] = f"{res}\n\nPassage:\n{passage}"
         return result
