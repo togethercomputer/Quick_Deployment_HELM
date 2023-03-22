@@ -8,6 +8,7 @@ import random
 import logging
 import argparse
 import numpy as np
+from faiss_retrieval import *
 from utils import *
 from model_utils import *
 from typing import Dict
@@ -65,11 +66,15 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
+        self.plugin = args.get('plugin')
         torch.manual_seed(0)
         torch.cuda.empty_cache()
         logging.debug(f"<HuggingFaceLocalNLPModelInference.__init__> initialization done")
 
     def dispatch_request(self, args, env) -> Dict:
+        plugin_state = {}
+        if self.plugin:
+            self.plugin.request(args, env, plugin_state)
         logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> starts")
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
@@ -118,11 +123,15 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "raw_compute_time": 0.0
             }
             logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> (empty input or output) return: {result}")
+            if self.plugin:
+                return self.plugin.response(result, plugin_state)
             return result
         else:
             result = self._run_inference()
             torch.cuda.empty_cache()
             logging.debug(f"<HuggingFaceLocalNLPModelInference.dispatch_request> return: {result}")
+            if self.plugin:
+                return self.plugin.response(result, plugin_state)
             return result
 
     def _run_inference(self):
@@ -328,7 +337,13 @@ if __name__ == "__main__":
                         help='device.')
     parser.add_argument('--dtype', type=str, default="",
                         help='dtype.')
+    parser.add_argument('--plugin', type=str, default="",
+                        help='plugin.')
     args = parser.parse_args()
+
+    plugin = None
+    if args.plugin == "faiss_retrieval":
+        plugin = FaissRetrievalPlugin()
 
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
     coord_http_port = os.environ.get("COORD_HTTP_PORT", "8092")
@@ -362,6 +377,7 @@ if __name__ == "__main__":
         "gpu_num":1,
         "gpu_type":"RTX 3090",
         "gpu_mem":2400000,
-        "deny_list": deny_list
+        "deny_list": deny_list,
+        "plugin": plugin,
     })
     fip.start()
