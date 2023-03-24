@@ -72,6 +72,20 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     return model, tokenizer
 
 
+def get_local_huggingface_tokenizer_model_llm_int8(model_name, model_path=None, dtype=None):
+    
+    if model_path is None:
+        model_path = model_name
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto', load_in_8bit=True)
+
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = 'left'
+    tokenizer.truncation_side = 'left'
+    return model, tokenizer
+
+
 def get_dist_accelerate_tokenizer_model(model_name, model_path):
     from accelerate import init_empty_weights,load_checkpoint_and_dispatch
     if model_name == "facebook/galactica-120b":
