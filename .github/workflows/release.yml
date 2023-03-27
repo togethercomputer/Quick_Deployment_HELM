@@ -40,7 +40,7 @@ jobs:
           mode: start
           github-token: ${{ secrets.ROBOT_GITHUB_TOKEN }}
           ec2-image-id: ami-0c7c3448920e5e369
-          ec2-instance-type: m7g.2xlarge
+          ec2-instance-type: m6i.2xlarge
           subnet-id: subnet-0348e73a9417d8b7c
           security-group-id: sg-0781caaa733a6d51a
 
