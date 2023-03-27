@@ -39,6 +39,7 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install -e . && \
     pip3 install sentencepiece && \
     pip3 install accelerate && \
+    pip3 install bitsandbytes && \
     echo "conda activate alpa" >> ~/.bashrc
 
 RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \

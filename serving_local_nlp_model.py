@@ -60,12 +60,17 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
-        if args['model_path'] != '':
-            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
+        if args.get('dtype') == 'llm.int8':
+            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None)
+            self.model = model # int8 cannot do .to(device)
+            self.tokenizer = tokenizer
         else:
-            model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
-        self.model = model.to(self.device)
-        self.tokenizer = tokenizer
+            if args['model_path'] != '':
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
+            else:
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
+            self.model = model.to(self.device)
+            self.tokenizer = tokenizer
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
         torch.cuda.empty_cache()
