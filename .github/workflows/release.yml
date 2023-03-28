@@ -12,6 +12,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   DOCKERHUB_REPOSITORY: native_hf_models
+  DOCKERHUB_ORGANIZATION: togethercomputer
   DOCKERFILE: dockerfile_together
 
 defaults:
@@ -48,8 +49,6 @@ jobs:
 
       - name: Build, tag, and push image to DockerHub
         id: build-image
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           export HOME=$(mktemp -d)
           git fetch --tags --unshallow --prune
@@ -61,9 +60,9 @@ jobs:
           git config --global user.name 'Together Robot'
           git push --tags
           docker build -f "$DOCKERFILE" --build-arg TAG_NAME=${TAG_NAME} \
-            -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:${TAG_NAME} \
-            -t ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}:latest .
-          docker push -a ${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}
+            -t ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}:${TAG_NAME} \
+            -t ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}:latest .
+          docker push -a ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}
           echo "::set-output name=tag::$TAG_NAME"
           echo "Finished push"
           sleep 30
