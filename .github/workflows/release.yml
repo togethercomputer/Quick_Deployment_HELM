@@ -77,6 +77,7 @@ jobs:
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
+          HOME=$(mktemp -d)
           git fetch --tags --unshallow --prune
           curl -sL https://git.io/autotag-install | sh --
           TAG_NAME=v$(bin/autotag -b main -p main -T datetime)
