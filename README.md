@@ -12,7 +12,7 @@ docker run --pull=always --rm --gpus device=2 \
  --worker.service OpenChatTest --worker.model gpt-neoxt-v0.15
 ```
 
-To bring up a standalone node with retrieval:
+To bring up a standalone node with retrieval: (Which will HTTP GET [http://host.docker.internal:5001](retrieval_plugin.py) by default. To change add `--plugin_url` to [cfg.yaml](cfg-neoxt-retrieval-local.yaml).
 
 ```console
 docker run --pull=always --rm --gpus device=2 \
@@ -36,7 +36,8 @@ docker run --pull=always --rm --gpus device=2 \
 Start opt-350m in CPU on Mac laptop:
 
 ```console
-~/together-node/build/together-node start --config ./cfg-opt-350m-docker-macos.yaml
+~/together-node/build/together-node start --config ./cfg-opt-350m-docker-macos.yaml \
+  --worker.image_pull none
 ```
 
 Start opt-350m in CPU on Linux:
