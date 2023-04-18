@@ -55,6 +55,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "repetition_penalty": 1.0,
             "stop": [],
             "logprobs": 0,
+            "echo": False,
         }
         self.device = args['device']
         self.hf_model_name = args['hf_model_name']
@@ -106,11 +107,12 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["repetition_penalty"] = get_float(args.get("repetition_penalty", 1.0), default=1.0)
         self.task_info["stop"] = args.get("stop", [])
         self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
+        self.task_info["echo"] = bool(get_int(args.get("echo", 0), default=0))
 
         if args.get("stream_tokens"):
             self.task_info["stream_tokens"] = lambda token: self.stream_tokens(token, env)
 
-        if len(self.task_info["prompt_seqs"][0]) == 0 or self.task_info["output_len"] == 0:
+        if len(self.task_info["prompt_seqs"][0]) == 0 or (self.task_info["output_len"] == 0 and self.task_info["echo"] == False):
             inference_result = []
             item = {'choices': [], }
             for beam_id in range(self.task_info["beam_width"]):
@@ -142,181 +144,271 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def _run_inference(self):
         logging.debug(f"<HuggingFaceLocalNLPModelInference._run_inference> start.")
         complete_contexts = self.task_info["prompt_seqs"]
-
-        with torch.no_grad():
-            logging.debug(self.task_info)
-            torch.manual_seed(self.task_info['seed'])
-            np.random.seed(self.task_info['seed'])
-            random.seed(self.task_info['seed'])
-            batch_size = min(len(complete_contexts), self.max_batch_size)
-            num_iter = math.ceil(len(complete_contexts) / batch_size)
-            output_buffer = []
-            logprobs_buffer = []
-            output_scores = self.task_info["logprobs"] > 0
-            if output_scores:
+        
+        
+        if self.task_info["echo"]:
+            
+            with torch.no_grad():
+                logging.debug(self.task_info)
+                torch.manual_seed(self.task_info['seed'])
+                np.random.seed(self.task_info['seed'])
+                random.seed(self.task_info['seed'])
+                batch_size = min(len(complete_contexts), self.max_batch_size)
+                num_iter = math.ceil(len(complete_contexts) / batch_size)
+                output_buffer = []
                 logprobs_buffer = []
-            else:
-                logprobs_buffer = None
-
-            time = timeit.default_timer()
-            for iter_i in range(num_iter):
-                contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
-                # Do translation
-                contexts = [translate_chatml_to_openchat(context) for context in contexts]
-                inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
-                logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
-                input_length = inputs.input_ids.shape[1]
-
-                if self.task_info["temperature"] == 0:
-                    outputs = self.model.generate(
-                        **inputs, do_sample=False, 
-                        max_new_tokens=self.task_info["output_len"],
-                        return_dict_in_generate=True,
-                        output_scores=output_scores,  # return logit score
-                        output_hidden_states=True,  # return embeddings
-                        stream_tokens=self.task_info.get("stream_tokens"),
-                    )
-                else:
-                    outputs = self.model.generate(
-                        **inputs, 
-                        do_sample=True, 
-                        top_p=self.task_info['top_p'],
-                        top_k=self.task_info['top_k'],
-                        repetition_penalty=self.task_info['repetition_penalty'],
-                        temperature=self.task_info["temperature"],
-                        max_new_tokens=self.task_info["output_len"],
-                        return_dict_in_generate=True,
-                        output_scores=output_scores,  # return logit score
-                        output_hidden_states=True,  # return embeddings
-                        stream_tokens=self.task_info.get("stream_tokens"),
-                        stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
-                    )
+                output_scores = self.task_info["logprobs"] > 0
                 if output_scores:
-                    ### hard code, assume bsz==1
-                    n_logprobs = self.task_info["logprobs"]
-    
-                    # sampled tokens
-                    token_ids = outputs.sequences[0, inputs['input_ids'].size(1):].tolist()
-                    tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+                    logprobs_buffer = []
+                else:
+                    logprobs_buffer = None
 
-                    logprobs_dict = {
-                        'tokens': tokens,
-                        'token_logprobs': [],
-                        'top_logprobs': [],
-                    }
-
-                    # last layer hidden states
-                    hids = [outputs.hidden_states[0][-1][:, -1:]]
-                    hids += [hid[-1] for hid in outputs.hidden_states[1:]]
-                    hids = torch.cat(hids, dim=1)
-                    # origianl logits
-                    logits = self.model.get_output_embeddings()(hids)
-                    logprobs = logits.log_softmax(-1)
-                    values, indices = logprobs.topk(n_logprobs, dim=-1)
-
-                    for i in range(indices.size(1)):
-                        selected_token_id = token_ids[i]
-                        # topk tokens
-                        tokens = self.tokenizer.convert_ids_to_tokens(indices[0, i])
-                        # topk scores
-                        scores = values[0, i].tolist()
-
-                        logprobs_dict['token_logprobs'].append(logprobs[0, i, selected_token_id].item())
-                        logprobs_dict['top_logprobs'].append({
-                            t: s for t,s in zip(tokens, scores)
-                        })
-                        
-                    logprobs_buffer.append(logprobs_dict)
+                time = timeit.default_timer()
+                for iter_i in range(num_iter):
+                    contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
+                    # Do translation
+                    contexts = [translate_chatml_to_openchat(context) for context in contexts]
+                    inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+                    logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
+                    input_length = inputs.input_ids.shape[1]
                     
-                output_buffer.append(outputs)
-            time_elapsed = timeit.default_timer() - time
+                    outputs = self.model(**inputs)
 
-        logging.debug(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+                    if output_scores:
+                        ### hard code, assume bsz==1
+                        n_logprobs = self.task_info["logprobs"]
 
-        if len(complete_contexts) == 1:
-            item = {'choices': [], }
-            for beam_id in range(self.task_info["beam_width"]):
-                if self.hf_model_name == "google/flan-t5-xxl":
-                    token = outputs.sequences[beam_id, :]
-                else:
-                    token = outputs.sequences[beam_id, input_length:]  # exclude context input from the output
-                logging.debug(f"[INFO] raw token: {token}")
-                output = self.tokenizer.decode(token)
-                logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
-                choice = {
-                    "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
-                    "index": beam_id,
-                    "finish_reason": "length"
+                        # sampled tokens
+                        token_ids = inputs.input_ids[0].tolist()
+                        tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+
+                        logprobs_dict = {
+                            'tokens': tokens,
+                            'token_logprobs': [None],
+                            'top_logprobs': [None],
+                        }
+
+                        logprobs = outputs.logits.log_softmax(-1)
+                        values, indices = logprobs.topk(n_logprobs, dim=-1)
+
+                        for i in range(indices.size(1)-1):
+                            selected_token_id = token_ids[i+1]
+                            # topk tokens
+                            tokens = self.tokenizer.convert_ids_to_tokens(indices[0, i])
+                            # topk scores
+                            scores = values[0, i].tolist()
+
+                            logprobs_dict['token_logprobs'].append(logprobs[0, i, selected_token_id].item())
+                            logprobs_dict['top_logprobs'].append({
+                                t: s for t,s in zip(tokens, scores)
+                            })
+
+                        logprobs_buffer.append(logprobs_dict)
+
+                    output_buffer.append(outputs)
+                time_elapsed = timeit.default_timer() - time
+
+            logging.debug(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+
+            if len(complete_contexts) == 1:
+                item = {'choices': [], }
+                for beam_id in range(self.task_info["beam_width"]):
+                    token = inputs.input_ids[0].tolist()
+                    logging.debug(f"[INFO] raw token: {token}")
+                    output = self.tokenizer.decode(token)
+                    logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                    choice = {
+                        "text": output,
+                        "index": beam_id,
+                        "finish_reason": "length"
+                    }
+                    if output_scores:
+                        choice['logprobs'] = logprobs_buffer[0]
+                    item['choices'].append(choice)
+                result = {
+                    "result_type": RequestTypeLanguageModelInference,
+                    "choices": item['choices'],
+                    "raw_compute_time": time_elapsed
                 }
-                if output_scores:
-                    choice['logprobs'] = logprobs_buffer[0]
-                item['choices'].append(choice)
-            result = {
-                "result_type": RequestTypeLanguageModelInference,
-                "choices": item['choices'],
-                "raw_compute_time": time_elapsed
-            }
+            else:
+                raise Exception("not impl yet")
+        
         else:
-            """
-            inference_result = []
-            for outputs in output_buffer:
-                beam_width = self.task_info["beam_width"]
-                current_batch_size = outputs.sequences.shape[0] // beam_width
-                for sample_id in range(current_batch_size):
-                    item = {'choices': [], }
-                    for beam_id in range(beam_width):
-                        if self.hf_model_name == "google/flan-t5-xxl":
-                            token = outputs.sequences[sample_id*beam_width+beam_id, :]
-                        else:
-                            # exclude context input from the output
-                            token = outputs.sequences[sample_id*beam_width+beam_id, input_length:]
-                        logging.debug(f"[INFO] raw token: {token}")
-                        output = self.tokenizer.decode(token)
-                        logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
-                        choice = {
-                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
-                            "index": beam_id,
-                            "finish_reason": "length"
-                        }
-                        item['choices'].append(choice)
-                    inference_result.append(item)
-            result = {
-                "result_type": RequestTypeLanguageModelInference,
-                "choices": inference_result,
-                "raw_compute_time": time_elapsed,
-                # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
-            }
-            """
-            item = {'choices': [], }
-            for i_output, outputs in enumerate(output_buffer):
-                beam_width = self.task_info["beam_width"]
-                current_batch_size = outputs.sequences.shape[0] // beam_width
-                for sample_id in range(current_batch_size):
 
-                    for beam_id in range(beam_width):
-                        if self.hf_model_name == "google/flan-t5-xxl":
-                            token = outputs.sequences[sample_id * beam_width + beam_id, :]
-                        else:
-                            # exclude context input from the output
-                            token = outputs.sequences[sample_id * beam_width + beam_id, input_length:]
-                        logging.debug(f"[INFO] raw token: {token}")
-                        output = self.tokenizer.decode(token)
-                        logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
-                        choice = {
-                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
-                            "index": beam_id,
-                            "finish_reason": "length"+str(sample_id)
+            with torch.no_grad():
+                logging.debug(self.task_info)
+                torch.manual_seed(self.task_info['seed'])
+                np.random.seed(self.task_info['seed'])
+                random.seed(self.task_info['seed'])
+                batch_size = min(len(complete_contexts), self.max_batch_size)
+                num_iter = math.ceil(len(complete_contexts) / batch_size)
+                output_buffer = []
+                logprobs_buffer = []
+                output_scores = self.task_info["logprobs"] > 0
+                if output_scores:
+                    logprobs_buffer = []
+                else:
+                    logprobs_buffer = None
+
+                time = timeit.default_timer()
+                for iter_i in range(num_iter):
+                    contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
+                    # Do translation
+                    contexts = [translate_chatml_to_openchat(context) for context in contexts]
+                    inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+                    logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
+                    input_length = inputs.input_ids.shape[1]
+
+                    if self.task_info["temperature"] == 0:
+                        outputs = self.model.generate(
+                            **inputs, do_sample=False, 
+                            max_new_tokens=self.task_info["output_len"],
+                            return_dict_in_generate=True,
+                            output_scores=output_scores,  # return logit score
+                            output_hidden_states=True,  # return embeddings
+                            stream_tokens=self.task_info.get("stream_tokens"),
+                        )
+                    else:
+                        outputs = self.model.generate(
+                            **inputs, 
+                            do_sample=True, 
+                            top_p=self.task_info['top_p'],
+                            top_k=self.task_info['top_k'],
+                            repetition_penalty=self.task_info['repetition_penalty'],
+                            temperature=self.task_info["temperature"],
+                            max_new_tokens=self.task_info["output_len"],
+                            return_dict_in_generate=True,
+                            output_scores=output_scores,  # return logit score
+                            output_hidden_states=True,  # return embeddings
+                            stream_tokens=self.task_info.get("stream_tokens"),
+                            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
+                        )
+                    if output_scores:
+                        ### hard code, assume bsz==1
+                        n_logprobs = self.task_info["logprobs"]
+
+                        # sampled tokens
+                        token_ids = outputs.sequences[0, inputs['input_ids'].size(1):].tolist()
+                        tokens = self.tokenizer.convert_ids_to_tokens(token_ids)
+
+                        logprobs_dict = {
+                            'tokens': tokens,
+                            'token_logprobs': [],
+                            'top_logprobs': [],
                         }
-                        if output_scores:
-                            choice['logprobs'] = logprobs_buffer[i_output]
-                        item['choices'].append(choice)
-                        
-            result = {
-                "result_type": RequestTypeLanguageModelInference,
-                "choices": item['choices'],
-                "raw_compute_time": time_elapsed,
-                # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
-            }
+
+                        # last layer hidden states
+                        hids = [outputs.hidden_states[0][-1][:, -1:]]
+                        hids += [hid[-1] for hid in outputs.hidden_states[1:]]
+                        hids = torch.cat(hids, dim=1)
+                        # origianl logits
+                        logits = self.model.get_output_embeddings()(hids)
+                        logprobs = logits.log_softmax(-1)
+                        values, indices = logprobs.topk(n_logprobs, dim=-1)
+
+                        for i in range(indices.size(1)):
+                            selected_token_id = token_ids[i]
+                            # topk tokens
+                            tokens = self.tokenizer.convert_ids_to_tokens(indices[0, i])
+                            # topk scores
+                            scores = values[0, i].tolist()
+
+                            logprobs_dict['token_logprobs'].append(logprobs[0, i, selected_token_id].item())
+                            logprobs_dict['top_logprobs'].append({
+                                t: s for t,s in zip(tokens, scores)
+                            })
+
+                        logprobs_buffer.append(logprobs_dict)
+
+                    output_buffer.append(outputs)
+                time_elapsed = timeit.default_timer() - time
+
+            logging.debug(f"[INFO] HuggingFaceLocalNLPModelInference time costs: {time_elapsed} ms. ")
+
+            if len(complete_contexts) == 1:
+                item = {'choices': [], }
+                for beam_id in range(self.task_info["beam_width"]):
+                    if self.hf_model_name == "google/flan-t5-xxl":
+                        token = outputs.sequences[beam_id, :]
+                    else:
+                        token = outputs.sequences[beam_id, input_length:]  # exclude context input from the output
+                    logging.debug(f"[INFO] raw token: {token}")
+                    output = self.tokenizer.decode(token)
+                    logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                    choice = {
+                        "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
+                        "index": beam_id,
+                        "finish_reason": "length"
+                    }
+                    if output_scores:
+                        choice['logprobs'] = logprobs_buffer[0]
+                    item['choices'].append(choice)
+                result = {
+                    "result_type": RequestTypeLanguageModelInference,
+                    "choices": item['choices'],
+                    "raw_compute_time": time_elapsed
+                }
+            else:
+                """
+                inference_result = []
+                for outputs in output_buffer:
+                    beam_width = self.task_info["beam_width"]
+                    current_batch_size = outputs.sequences.shape[0] // beam_width
+                    for sample_id in range(current_batch_size):
+                        item = {'choices': [], }
+                        for beam_id in range(beam_width):
+                            if self.hf_model_name == "google/flan-t5-xxl":
+                                token = outputs.sequences[sample_id*beam_width+beam_id, :]
+                            else:
+                                # exclude context input from the output
+                                token = outputs.sequences[sample_id*beam_width+beam_id, input_length:]
+                            logging.debug(f"[INFO] raw token: {token}")
+                            output = self.tokenizer.decode(token)
+                            logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                            choice = {
+                                "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
+                                "index": beam_id,
+                                "finish_reason": "length"
+                            }
+                            item['choices'].append(choice)
+                        inference_result.append(item)
+                result = {
+                    "result_type": RequestTypeLanguageModelInference,
+                    "choices": inference_result,
+                    "raw_compute_time": time_elapsed,
+                    # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
+                }
+                """
+                item = {'choices': [], }
+                for i_output, outputs in enumerate(output_buffer):
+                    beam_width = self.task_info["beam_width"]
+                    current_batch_size = outputs.sequences.shape[0] // beam_width
+                    for sample_id in range(current_batch_size):
+
+                        for beam_id in range(beam_width):
+                            if self.hf_model_name == "google/flan-t5-xxl":
+                                token = outputs.sequences[sample_id * beam_width + beam_id, :]
+                            else:
+                                # exclude context input from the output
+                                token = outputs.sequences[sample_id * beam_width + beam_id, input_length:]
+                            logging.debug(f"[INFO] raw token: {token}")
+                            output = self.tokenizer.decode(token)
+                            logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
+                            choice = {
+                                "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
+                                "index": beam_id,
+                                "finish_reason": "length"+str(sample_id)
+                            }
+                            if output_scores:
+                                choice['logprobs'] = logprobs_buffer[i_output]
+                            item['choices'].append(choice)
+
+                result = {
+                    "result_type": RequestTypeLanguageModelInference,
+                    "choices": item['choices'],
+                    "raw_compute_time": time_elapsed,
+                    # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
+                }
 
         #if self.task_info["logprobs"] > 0:
         #    result['logprobs'] = logprobs
