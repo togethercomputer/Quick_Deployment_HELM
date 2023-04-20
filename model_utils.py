@@ -49,6 +49,12 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     elif model_name == 'togethercomputer/GPT-JT-6B-v1':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1", torch_dtype=torch.float16)
+    elif model_name == 'stabilityai/stablelm-base-alpha-3b':
+        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-3b")
+        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-3b", torch_dtype=torch.float16)
+    elif model_name == 'stabilityai/stablelm-base-alpha-7b':
+        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-7b")
+        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-7b", torch_dtype=torch.float16)
     elif model_name == 'EleutherAI/gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
