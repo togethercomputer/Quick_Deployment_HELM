@@ -65,6 +65,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None)
             self.model = model # int8 cannot do .to(device)
             self.tokenizer = tokenizer
+        elif args.get('dtype') == 'dist.fp16':
+            model, tokenizer = get_dist_accelerate_tokenizer_model(args['hf_model_name'], args['model_path'], None)
+            self.model = model
+            self.tokenizer = tokenizer
         else:
             if args['model_path'] != '':
                 model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
@@ -172,6 +176,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                     input_length = inputs.input_ids.shape[1]
                     
+                    if 'token_type_ids' in inputs:
+                        inputs.pop('token_type_ids')
+                    
                     outputs = self.model(**inputs)
 
                     if output_scores:
@@ -256,6 +263,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     # Do translation
                     contexts = [translate_chatml_to_openchat(context) for context in contexts]
                     inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+                    
+                    if 'token_type_ids' in inputs:
+                        inputs.pop('token_type_ids')
+                        
                     logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                     input_length = inputs.input_ids.shape[1]
 
@@ -266,7 +277,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=True,  # return embeddings
-                            stream_tokens=self.task_info.get("stream_tokens"),
+                            # stream_tokens=self.task_info.get("stream_tokens"),
                         )
                     else:
                         outputs = self.model.generate(
@@ -280,7 +291,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=True,  # return embeddings
-                            stream_tokens=self.task_info.get("stream_tokens"),
+                            # stream_tokens=self.task_info.get("stream_tokens"),
                             stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     if output_scores:

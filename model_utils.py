@@ -86,7 +86,7 @@ def get_local_huggingface_tokenizer_model_llm_int8(model_name, model_path=None, 
     return model, tokenizer
 
 
-def get_dist_accelerate_tokenizer_model(model_name, model_path):
+def get_dist_accelerate_tokenizer_model(model_name, model_path, dtype=None):
     from accelerate import init_empty_weights,load_checkpoint_and_dispatch
     if model_name == "facebook/galactica-120b":
         config = AutoConfig.from_pretrained(model_path)
@@ -114,6 +114,25 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
                 model, model_path+'/opt-iml-regular.pt', device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
             )
             tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
+    elif 'llama' in model_name:
+        print('loading llama...............')
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config).half()
+        model = load_checkpoint_and_dispatch(
+            model, model_path, device_map="auto", no_split_module_classes=["LlamaDecoderLayer"]
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer.pad_token = tokenizer.eos_token
+    elif 'bloom' in model_name:
+        print('loading bloom...............')
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config).bfloat16()
+        model = load_checkpoint_and_dispatch(
+            model, model_path, device_map="auto", no_split_module_classes=["BloomBlock"]
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
     else:
         assert False, f"Not legal name {model_name}"
     print(f"<get_dist_accelerate_tokenizer_model>: {model_name} hf_device_map")
