@@ -14,6 +14,7 @@ from model_utils import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
+from transformers import InfNanRemoveLogitsProcessor, LogitsProcessorList
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
@@ -56,6 +57,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "stop": [],
             "logprobs": 0,
             "echo": False,
+            "penalty_alpha": 0,
         }
         self.device = args['device']
         self.hf_model_name = args['hf_model_name']
@@ -105,6 +107,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["temperature"] = get_float(args.get("temperature", 0.8), default=0.8)
         self.task_info["len_penalty"] = get_float(args.get("len_penalty", 0.0), default=0.0)
         self.task_info["repetition_penalty"] = get_float(args.get("repetition_penalty", 1.0), default=1.0)
+        self.task_info["penalty_alpha"] = get_float(args.get("penalty_alpha", 0), default=0)
         self.task_info["stop"] = args.get("stop", [])
         self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
         self.task_info["echo"] = bool(get_int(args.get("echo", 0), default=0))
@@ -188,7 +191,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             'top_logprobs': [None],
                         }
 
-                        logprobs = outputs.logits.log_softmax(-1)
+                        logprobs = outputs.logits.nan_to_num().log_softmax(-1).nan_to_num()
                         values, indices = logprobs.topk(n_logprobs, dim=-1)
 
                         for i in range(indices.size(1)-1):
@@ -266,7 +269,24 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=True,  # return embeddings
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
+                            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                             stream_tokens=self.task_info.get("stream_tokens"),
+                        )
+                    elif self.task_info["penalty_alpha"] > 0:
+                        outputs = self.model.generate(
+                            **inputs,  
+                            top_k=self.task_info['top_k'],
+                            repetition_penalty=self.task_info['repetition_penalty'],
+                            temperature=self.task_info["temperature"],
+                            penalty_alpha=self.task_info["penalty_alpha"],
+                            max_new_tokens=self.task_info["output_len"],
+                            return_dict_in_generate=True,
+                            output_scores=output_scores,  # return logit score
+                            output_hidden_states=True,  # return embeddings
+                            stream_tokens=self.task_info.get("stream_tokens"),
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
+                            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     else:
                         outputs = self.model.generate(
@@ -276,11 +296,13 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             top_k=self.task_info['top_k'],
                             repetition_penalty=self.task_info['repetition_penalty'],
                             temperature=self.task_info["temperature"],
+                            penalty_alpha=self.task_info["penalty_alpha"],
                             max_new_tokens=self.task_info["output_len"],
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=True,  # return embeddings
                             stream_tokens=self.task_info.get("stream_tokens"),
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
                             stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     if output_scores:
@@ -300,10 +322,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         # last layer hidden states
                         hids = [outputs.hidden_states[0][-1][:, -1:]]
                         hids += [hid[-1] for hid in outputs.hidden_states[1:]]
-                        hids = torch.cat(hids, dim=1)
+                        hids = torch.cat(hids, dim=1).nan_to_num()
                         # origianl logits
-                        logits = self.model.get_output_embeddings()(hids)
-                        logprobs = logits.log_softmax(-1)
+                        logits = self.model.get_output_embeddings()(hids).nan_to_num()
+                        logprobs = logits.log_softmax(-1).nan_to_num()
                         values, indices = logprobs.topk(n_logprobs, dim=-1)
 
                         for i in range(indices.size(1)):
