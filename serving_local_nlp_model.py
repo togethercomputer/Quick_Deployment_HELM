@@ -152,7 +152,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         
         if self.task_info["echo"]:
             
-            with torch.no_grad():
+            with torch.inference_mode():
                 logging.debug(self.task_info)
                 torch.manual_seed(self.task_info['seed'])
                 np.random.seed(self.task_info['seed'])
@@ -242,7 +242,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         
         else:
 
-            with torch.no_grad():
+            with torch.inference_mode():
                 logging.debug(self.task_info)
                 torch.manual_seed(self.task_info['seed'])
                 np.random.seed(self.task_info['seed'])
@@ -276,7 +276,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             max_new_tokens=self.task_info["output_len"],
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
-                            output_hidden_states=True,  # return embeddings
+                            output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
                         )
                     else:
@@ -290,7 +290,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             max_new_tokens=self.task_info["output_len"],
                             return_dict_in_generate=True,
                             output_scores=output_scores,  # return logit score
-                            output_hidden_states=True,  # return embeddings
+                            output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
                             stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
@@ -314,7 +314,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         hids = torch.cat(hids, dim=1)
                         # origianl logits
                         logits = self.model.get_output_embeddings()(hids)
-                        logprobs = logits.log_softmax(-1)
+                        logprobs = logits.float().log_softmax(-1)
                         values, indices = logprobs.topk(n_logprobs, dim=-1)
 
                         for i in range(indices.size(1)):

@@ -129,8 +129,9 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path, dtype=None):
         config = AutoConfig.from_pretrained(model_path)
         with init_empty_weights():
             model = AutoModelForCausalLM.from_config(config).bfloat16()
+            model.tie_weights()
         model = load_checkpoint_and_dispatch(
-            model, model_path, device_map="auto", no_split_module_classes=["BloomBlock"]
+            model, model_path, device_map="balanced_low_0", no_split_module_classes=["BloomBlock"]
         )
         tokenizer = AutoTokenizer.from_pretrained(model_path)
     else:
