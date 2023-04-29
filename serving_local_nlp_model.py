@@ -53,6 +53,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             "temperature": 0.1,
             "len_penalty": 0,
             "repetition_penalty": 1.0,
+            "penalty_alpha": 0,
             "stop": [],
             "logprobs": 0,
             "echo": False,
@@ -109,6 +110,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["temperature"] = get_float(args.get("temperature", 0.8), default=0.8)
         self.task_info["len_penalty"] = get_float(args.get("len_penalty", 0.0), default=0.0)
         self.task_info["repetition_penalty"] = get_float(args.get("repetition_penalty", 1.0), default=1.0)
+        self.task_info["penalty_alpha"] = get_float(args.get("penalty_alpha", 0.0), default=0.0)
         self.task_info["stop"] = args.get("stop", [])
         self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
         self.task_info["echo"] = bool(get_int(args.get("echo", 0), default=0))
@@ -278,6 +280,18 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
+                        )
+                    elif self.task_info["penalty_alpha"] > 0:
+                        outputs = self.model.generate(
+                            **inputs, 
+                            top_k=self.task_info['top_k'],
+                            penalty_alpha=self.task_info['penalty_alpha'],
+                            max_new_tokens=self.task_info["output_len"],
+                            return_dict_in_generate=True,
+                            output_scores=output_scores,  # return logit score
+                            output_hidden_states=output_scores,  # return embeddings
+                            # stream_tokens=self.task_info.get("stream_tokens"),
+                            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     else:
                         outputs = self.model.generate(
