@@ -1,7 +1,13 @@
+import sys
+
+sys.path.append( './safari-internal' )
+
 import torch
 from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
 import logging
+
+from src.models.sequence.long_conv_lm import ConvLMHeadModel
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +64,32 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
             model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
         else:
             assert False
+    elif model_name == 'hb-small':
+        d_model =864
+        n_layer=18
+        layer=dict(
+            _name_='multihyena',
+            emb_dim=33,
+            filter_order=64, 
+            local_order=3,
+            num_heads=8,
+            l_max=2048,
+            fused_fft_conv=False,
+            modulate=True,
+            w=14,
+            lr=1e-5,
+            lr_pos_emb=1e-5,
+        )
+        tokenizer = AutoTokenizer.from_pretrained("gpt2")
+        model = ConvLMHeadModel(
+            d_model=d_model, n_layer=n_layer, d_inner=2 * d_model, vocab_size=len(tokenizer),
+            layer=layer, pad_vocab_size_multiple=8)
+        state_dict = torch.load(os.path.join(model_path, 'pytorch.ckpt'), map_location='cpu')
+        if 'pytorch-lightning_version' in state_dict:
+            state_dict = {k[len('model.'):]: v for k, v in state_dict['state_dict'].items()
+                          if k.startswith('model.')}
+        model.load_state_dict(state_dict)
+        
     elif model_path is not None and model_path != "":
         logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
         tokenizer = AutoTokenizer.from_pretrained(model_path)
