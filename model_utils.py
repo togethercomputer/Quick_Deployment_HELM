@@ -175,6 +175,10 @@ def get_dist_alpa_tokenizer_model(model_name, model_path):
         # llm_serving does not recoginze bloomz, since the model parameter is from bloomz,
         # this should be fine
         model = get_model(model_name="alpa/bloom", path=model_path)
+    elif model_name == 'bloom-ft':
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer.add_bos_token = False
+        model = get_model(model_name=model_path, path=model_path.rstrip('/') + '-alpa')
     else:
         assert False, f"Not legal name {model_name}"
 

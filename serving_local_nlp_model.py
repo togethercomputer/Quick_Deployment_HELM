@@ -63,7 +63,13 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
-        if args.get('dtype') == 'llm.int8':
+        if args.get('dtype') == 'alpa':
+            
+            model, tokenizer = get_dist_alpa_tokenizer_model(args['alpa_model_name'], args['model_path'])
+            self.model = model
+            self.tokenizer = tokenizer
+            
+        elif args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None)
             self.model = model # int8 cannot do .to(device)
             self.tokenizer = tokenizer
