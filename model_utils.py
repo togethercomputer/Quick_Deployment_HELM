@@ -83,6 +83,10 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
 
+    elif model_name == 'openlm-research/open_llama_7b_preview_200bt':
+        tokenizer = AutoTokenizer.from_pretrained("openlm-research/open_llama_7b_preview_200bt")
+        model = AutoModelForCausalLM.from_pretrained("openlm-research/open_llama_7b_preview_200bt")
+
     elif model_name == 'Together/gpt-neoxT-20b':
         if model_path is not None:
             tokenizer = AutoTokenizer.from_pretrained(model_path)
