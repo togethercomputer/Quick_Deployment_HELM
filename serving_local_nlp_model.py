@@ -14,6 +14,7 @@ from model_utils import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
+from transformers import InfNanRemoveLogitsProcessor, LogitsProcessorList
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
@@ -112,6 +113,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.task_info["repetition_penalty"] = get_float(args.get("repetition_penalty", 1.0), default=1.0)
         self.task_info["penalty_alpha"] = get_float(args.get("penalty_alpha", 0.0), default=0.0)
         self.task_info["stop"] = args.get("stop", [])
+        if '<|im_end|>' in self.task_info["stop"]:
+            self.task_info["stop"].append("<human>")
         self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
         self.task_info["echo"] = bool(get_int(args.get("echo", 0), default=0))
 
@@ -280,6 +283,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
+                            stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     elif self.task_info["penalty_alpha"] > 0:
                         outputs = self.model.generate(
@@ -291,6 +296,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
                             stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     else:
@@ -306,6 +312,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             output_scores=output_scores,  # return logit score
                             output_hidden_states=output_scores,  # return embeddings
                             # stream_tokens=self.task_info.get("stream_tokens"),
+                            logits_processor=LogitsProcessorList([InfNanRemoveLogitsProcessor()]),
                             stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                         )
                     if output_scores:
