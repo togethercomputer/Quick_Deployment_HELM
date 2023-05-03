@@ -70,6 +70,9 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-7b")
 
     # Together Computer Models
+    elif model_name == 'togethercomputer/Pythia-Chat-Base-7B':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/Pythia-Chat-Base-7B")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/Pythia-Chat-Base-7B")
     elif model_name == 'togethercomputer/GPT-JT-6B-v1':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1")
