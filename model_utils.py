@@ -46,18 +46,40 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     elif model_name == 'EleutherAI/gpt-j-6b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-j-6B")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-j-6B", torch_dtype=torch.float16)
-    elif model_name == 'togethercomputer/GPT-JT-6B-v1':
-        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
-        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1", torch_dtype=torch.float16)
-    elif model_name == 'stabilityai/stablelm-base-alpha-3b':
-        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-3b")
-        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-3b", torch_dtype=torch.float16)
-    elif model_name == 'stabilityai/stablelm-base-alpha-7b':
-        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-7b")
-        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-7b", torch_dtype=torch.float16)
     elif model_name == 'EleutherAI/gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
+
+    # DataBricks models
+    elif model_name == 'databricks/dolly-v2-3b':
+        tokenizer = AutoTokenizer.from_pretrained("databricks/dolly-v2-3b")
+        model = AutoModelForCausalLM.from_pretrained("databricks/dolly-v2-3b")
+    elif model_name == 'databricks/dolly-v2-7b':
+        tokenizer = AutoTokenizer.from_pretrained("databricks/dolly-v2-7b")
+        model = AutoModelForCausalLM.from_pretrained("databricks/dolly-v2-7b")
+    elif model_name == 'databricks/dolly-v2-12b':
+        tokenizer = AutoTokenizer.from_pretrained("databricks/dolly-v2-12b")
+        model = AutoModelForCausalLM.from_pretrained("databricks/dolly-v2-12b")
+
+    # StabilityAI Models
+    elif model_name == 'stabilityai/stablelm-base-alpha-3b':
+        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-3b")
+        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-3b")
+    elif model_name == 'stabilityai/stablelm-base-alpha-7b':
+        tokenizer = AutoTokenizer.from_pretrained("stabilityai/stablelm-base-alpha-7b")
+        model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-base-alpha-7b")
+
+    # Together Computer Models
+    elif model_name == 'togethercomputer/GPT-JT-6B-v1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1")
+    elif model_name == 'togethercomputer/GPT-JT-Moderation-6B':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-Moderation-6B")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-Moderation-6B")
+    elif model_name == 'togethercomputer/GPT-NeoXT-Chat-Base-20B':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
+
     elif model_name == 'Together/gpt-neoxT-20b':
         if model_path is not None:
             tokenizer = AutoTokenizer.from_pretrained(model_path)
