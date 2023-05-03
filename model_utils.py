@@ -7,8 +7,6 @@ from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGene
 from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
 import logging
 
-from src.models.sequence.long_conv_lm import ConvLMHeadModel
-
 logger = logging.getLogger(__name__)
 
 def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=None):
@@ -65,6 +63,9 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         else:
             assert False
     elif model_name == 'hb-small':
+        
+        from src.models.sequence.long_conv_lm import ConvLMHeadModel
+
         d_model =864
         n_layer=18
         layer=dict(

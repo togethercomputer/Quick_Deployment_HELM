@@ -177,7 +177,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                     # Do translation
                     contexts = [translate_chatml_to_openchat(context) for context in contexts]
-                    inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+                    inputs = self.tokenizer(contexts, padding=True, truncation=True, 
+                                            add_special_tokens=False,
+                                            return_tensors="pt").to(self.device)
                     logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                     input_length = inputs.input_ids.shape[1]
                     
@@ -224,7 +226,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 for beam_id in range(self.task_info["beam_width"]):
                     token = inputs.input_ids[0].tolist()
                     logging.debug(f"[INFO] raw token: {token}")
-                    output = self.tokenizer.decode(token)
+                    output = self.tokenizer.decode(token, skip_special_tokens=True)
                     logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                     choice = {
                         "text": output,
@@ -264,7 +266,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                     # Do translation
                     contexts = [translate_chatml_to_openchat(context) for context in contexts]
-                    inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
+                    inputs = self.tokenizer(contexts, padding=True, truncation=True, 
+                                            add_special_tokens=False,
+                                            return_tensors="pt").to(self.device)
                     logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                     input_length = inputs.input_ids.shape[1]
 
@@ -361,7 +365,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     else:
                         token = outputs.sequences[beam_id, input_length:]  # exclude context input from the output
                     logging.debug(f"[INFO] raw token: {token}")
-                    output = self.tokenizer.decode(token)
+                    output = self.tokenizer.decode(token, skip_special_tokens=True)
                     logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                     choice = {
                         "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
@@ -420,7 +424,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                                 # exclude context input from the output
                                 token = outputs.sequences[sample_id * beam_width + beam_id, input_length:]
                             logging.debug(f"[INFO] raw token: {token}")
-                            output = self.tokenizer.decode(token)
+                            output = self.tokenizer.decode(token, skip_special_tokens=True)
                             logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                             choice = {
                                 "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
