@@ -76,12 +76,34 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     elif model_name == 'togethercomputer/GPT-JT-6B-v1':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-6B-v1")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-6B-v1")
+    elif model_name == 'togethercomputer/GPT-JT-X-6B-v1.1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-X-6B-v1.1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-X-6B-v1.1")
     elif model_name == 'togethercomputer/GPT-JT-Moderation-6B':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-JT-Moderation-6B")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-Moderation-6B")
     elif model_name == 'togethercomputer/GPT-NeoXT-Chat-Base-20B':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
+
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Base-3B-v1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Base-3B-v1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Base-3B-v1")
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Chat-3B-v1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Chat-3B-v1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Chat-3B-v1")
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Instruct-3B-v1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Instruct-3B-v1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Instruct-3B-v1")
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Base-7B-v0.1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Base-7B-v0.1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Base-7B-v0.1")
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Chat-7B-v0.1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Chat-7B-v0.1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Chat-7B-v0.1")
+    elif model_name == 'togethercomputer/RedPajama-INCITE-Instruct-7B-v0.1':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Instruct-7B-v0.1")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/RedPajama-INCITE-Instruct-7B-v0.1")
 
     elif model_name == 'openlm-research/open_llama_7b_preview_200bt':
         tokenizer = AutoTokenizer.from_pretrained("openlm-research/open_llama_7b_preview_200bt")
