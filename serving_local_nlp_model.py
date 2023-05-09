@@ -3,6 +3,8 @@ import sys
 import math
 import json
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import timeit
 import random
 import logging
@@ -333,8 +335,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         hids = [outputs.hidden_states[0][-1][:, -1:]]
                         hids += [hid[-1] for hid in outputs.hidden_states[1:]]
                         hids = torch.cat(hids, dim=1).nan_to_num()
-                        # origianl logits
+                        # hids = outputs.hidden_states[0][-1][:, -1:]
                         logits = self.model.get_output_embeddings()(hids).nan_to_num()
+                        # logits = torch.stack(outputs.scores, dim=1).nan_to_num()
                         logprobs = logits.log_softmax(-1).nan_to_num()
                         values, indices = logprobs.topk(n_logprobs, dim=-1)
 
