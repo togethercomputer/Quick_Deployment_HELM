@@ -120,7 +120,8 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16)
     else:
-        assert False, "Model not supported yet."
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
