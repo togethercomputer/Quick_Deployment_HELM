@@ -173,7 +173,8 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
             )
             tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
     else:
-        assert False, f"Not legal name {model_name}"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
     print(f"<get_dist_accelerate_tokenizer_model>: {model_name} hf_device_map")
     print(model.hf_device_map)
     return model, tokenizer
