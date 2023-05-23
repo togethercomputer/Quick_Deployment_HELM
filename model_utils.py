@@ -57,9 +57,10 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
     elif model_name == 'Together/gpt-neoxT-20b':
+        dtype = dtype or torch.float16
         if model_path is not None:
             tokenizer = AutoTokenizer.from_pretrained(model_path)
-            model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, torch_dtype=torch.float16)
+            model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, torch_dtype=dtype)
         else:
             assert False
     elif model_name == 'hb-small':
