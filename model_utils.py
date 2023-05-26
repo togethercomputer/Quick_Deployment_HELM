@@ -84,7 +84,7 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-JT-Moderation-6B")
     elif model_name == 'togethercomputer/GPT-NeoXT-Chat-Base-20B':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
-        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/GPT-NeoXT-Chat-Base-20B", torch_dtype=torch.float16)
 
     elif model_name == 'togethercomputer/RedPajama-INCITE-Base-3B-v1':
         tokenizer = AutoTokenizer.from_pretrained("togethercomputer/RedPajama-INCITE-Base-3B-v1")
