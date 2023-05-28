@@ -63,6 +63,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None)
             self.model = model # int8 cannot do .to(device)
+            
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+                
             self.tokenizer = tokenizer
         else:
             if args['model_path'] != '':
@@ -70,6 +74,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             else:
                 model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
             self.model = model.to(self.device)
+            
+            if tokenizer.pad_token is None:
+                tokenizer.pad_token = tokenizer.eos_token
+                
             self.tokenizer = tokenizer
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
