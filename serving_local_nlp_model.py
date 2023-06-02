@@ -8,9 +8,9 @@ import random
 import logging
 import argparse
 import numpy as np
-from faiss_retrieval import *
 from utils import *
 from model_utils import *
+from retrieval_plugin import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
@@ -352,11 +352,13 @@ if __name__ == "__main__":
                         help='dtype.')
     parser.add_argument('--plugin', type=str, default="",
                         help='plugin.')
+    parser.add_argument('--plugin_url', type=str, default="",
+                        help='plugin url.')
     args = parser.parse_args()
 
     plugin = None
-    if args.plugin == "faiss_retrieval":
-        plugin = FaissRetrievalPlugin()
+    if args.plugin == "retrieval" or args.plugin == "faiss_retrieval":
+        plugin = RetrievalPlugin(args.plugin_url)
 
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
     coord_http_port = os.environ.get("COORD_HTTP_PORT", "8092")

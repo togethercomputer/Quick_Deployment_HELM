@@ -1,12 +1,12 @@
 import requests
 
-class FaissRetrievalPlugin():
-    def __init__(self, url="http://host.docker.internal:5001"):
-        print("FaissRetrievalPlugin init", url)
-        self.url = url
+class RetrievalPlugin():
+    def __init__(self, url=None):
+        self.url = url if url else "http://host.docker.internal:5001"
+        print("RetrievalPlugin init", self.url)
 
     def request(self, args, env, state):
-        # print("FaissRetrievalPlugin request", args)
+        # print("RetrievalPlugin request", args)
         req = { "prompt": args[0]["prompt"] }
         result = requests.post(self.url, json=req).json()
         choice = result["data"]["choices"][0]
@@ -14,7 +14,7 @@ class FaissRetrievalPlugin():
         args[0]["prompt"] = choice["text"]
 
     def response(self, result, state):
-        # print("FaissRetrievalPlugin response", result)
+        # print("RetrievalPlugin response", result)
         passage = state["passage"]
         choice = result["choices"][0]
         res = choice["text"]
