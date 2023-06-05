@@ -132,12 +132,13 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     return model, tokenizer
 
 
-def get_local_huggingface_tokenizer_model_llm_int8(model_name, model_path=None, dtype=None):
-    
+def get_local_huggingface_tokenizer_model_llm_int8(model_name, model_path=None, dtype=None, auth_token=None):
+    use_auth_token=True if auth_token else None
+
     if model_path is None:
         model_path = model_name
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto', load_in_8bit=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=use_auth_token)
+    model = AutoModelForCausalLM.from_pretrained(model_path, device_map='auto', load_in_8bit=True, use_auth_token=use_auth_token)
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
