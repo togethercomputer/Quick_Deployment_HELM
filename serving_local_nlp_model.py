@@ -60,8 +60,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
+        auth_token = args['auth_token']
+        
         if args.get('dtype') == 'llm.int8':
-            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None)
+            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
             self.model = model # int8 cannot do .to(device)
             
             if tokenizer.pad_token is None:
@@ -70,9 +72,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             self.tokenizer = tokenizer
         else:
             if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'))
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token)
             else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'))
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token)
             self.model = model.to(self.device)
             
             if tokenizer.pad_token is None:
@@ -352,6 +354,8 @@ if __name__ == "__main__":
                         help='dtype.')
     parser.add_argument('--plugin', type=str, default="",
                         help='plugin.')
+    parser.add_argument('--auth-token', action='store_true',
+                        help='indicates whether to get auth token from huggingface-cli. Used for private repos.')
     args = parser.parse_args()
 
     plugin = None
@@ -392,5 +396,6 @@ if __name__ == "__main__":
         "gpu_mem":2400000,
         "deny_list": deny_list,
         "plugin": plugin,
+        "auth_token": args.auth_token,
     })
     fip.start()
