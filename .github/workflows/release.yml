@@ -69,6 +69,8 @@ jobs:
         with:
           file: ${{ env.DOCKERFILE }}
           push: true
-          tags: ${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:${{ env.TAG_NAME}}
+          tags:
+            - ${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:${{ env.TAG_NAME}}
+            - ${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:latest
           cache-from: type=registry,ref=${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:cache
           cache-to: type=registry,ref=${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:cache,mode=max
