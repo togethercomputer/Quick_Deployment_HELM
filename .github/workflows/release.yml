@@ -94,6 +94,7 @@ jobs:
       - name: build and push to dockerhub
         uses: docker/build-push-action@v4
         with:
+          dockerfile: ${{ env.DOCKERFILE }}
           push: true
           tags: ${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:${{ env.TAG_NAME}}
           cache-from: type=registry,ref=${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:cache
