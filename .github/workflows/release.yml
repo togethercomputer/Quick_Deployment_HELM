@@ -72,7 +72,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build, tag, and push image to DockerHub
+      - name: Create and push git version tag
         id: build-image
         run: |
           export HOME=$(pwd)
@@ -84,13 +84,14 @@ jobs:
           echo "${{ env.TAG_NAME }}"
           git config --global user.name 'Together Robot'
           git push --tags
-          docker build -f "$DOCKERFILE" --build-arg TAG_NAME=${TAG_NAME} \
-            -t ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}:${TAG_NAME} \
-            -t ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}:latest .
-          docker push -a ${DOCKERHUB_ORGANIZATION}/${DOCKERHUB_REPOSITORY}
-          echo "::set-output name=tag::$TAG_NAME"
-          echo "Finished push"
-          sleep 30
+
+      - name: build and push to dockerhub
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:${{ env.TAG_NAME}}
+          cache-from: type=registry,ref=${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:cache
+          cache-to: type=registry,ref=${{ env.DOCKERHUB_ORGANIZATION }}/${{ env.DOCKERHUB_REPOSITORY}}:cache,mode=max
 
   stop-runner:
     name: Stop EC2 runner on AWS
