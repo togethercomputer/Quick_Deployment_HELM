@@ -5,11 +5,14 @@ RUN mkdir -p /build
 WORKDIR /build
 
 # install common tool & conda
-RUN apt update && \
-    apt install wget -y && \
-    apt install git -y && \
-    apt install vim -y && \
-    wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh -O ~/anaconda.sh && \
+RUN apt-get update && apt-get install -y \
+  wget \
+  git \
+  vim \
+  coinor-cbc \
+  && rm -rf /var/lib/apt/lists/*
+    
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh -O ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \
     rm ~/anaconda.sh && \
     mkdir -p /opt/conda/envs/alpa && \
