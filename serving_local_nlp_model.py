@@ -60,8 +60,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.hf_model_name = args['hf_model_name']
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
+        auth_token = args['auth_token']
         
-        auth_token = os.environ.get("AUTH_TOKEN")
+        if auth_token is not True:
+            auth_token = None
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -355,6 +357,8 @@ if __name__ == "__main__":
                         help='dtype.')
     parser.add_argument('--plugin', type=str, default="",
                         help='plugin.')
+    parser.add_argument('--auth-token', action='store_true',
+                        help='indicates whether to stream tokens')
     args = parser.parse_args()
 
     plugin = None
@@ -395,5 +399,6 @@ if __name__ == "__main__":
         "gpu_mem":2400000,
         "deny_list": deny_list,
         "plugin": plugin,
+        "auth_token": args.auth_token,
     })
     fip.start()
