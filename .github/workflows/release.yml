@@ -75,6 +75,7 @@ jobs:
       - name: Build, tag, and push image to DockerHub
         id: build-image
         run: |
+          export HOME=$(pwd)
           git fetch --tags --unshallow --prune
           curl -sL https://git.io/autotag-install | sh --
           TAG_NAME=v$(bin/autotag -b main -p main -T datetime)
