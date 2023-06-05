@@ -23,25 +23,30 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_6
 
 # install conda alpa env
 RUN . /opt/conda/etc/profile.d/conda.sh && \
-    conda create --name alpa python=3.8 -y && \
+    conda create --name alpa python=3.8 -y
+
+RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate alpa && \
-    apt install coinor-cbc -y && \
     pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir cupy-cuda113 && \
-    pip3 install --no-cache-dir alpa && \
     pip3 install --no-cache-dir jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
-    pip3 install --no-cache-dir together_worker && \
-    git clone https://github.com/togethercomputer/transformers_port && \
-    cd transformers_port && pip install . && cd .. && rm -rf transformers_port && \
-    pip3 install --no-cache-dir fastapi uvicorn omegaconf jinja2 einops && \
-    pip3 install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113  && \
-    cd /build && \
-    git clone https://github.com/alpa-projects/alpa.git && \
-    cd alpa/examples && \
-    pip3 install -e . && \
-    pip3 install --no-cache-dir sentencepiece && \
-    pip3 install --no-cache-dir accelerate && \
-    pip3 install --no-cache-dir bitsandbytes && \
+    pip3 install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate alpa && \
+    pip3 install --no-cache-dir \
+      accelerate \
+      alpa \
+      bitsandbytes \
+      einops \
+      fastapi \
+      jinja2 \
+      omegaconf \
+      sentencepiece \
+      together_worker \
+      uvicorn \
+      'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
+      'transformers @ git+https://github.com/togethercomputer/transformers_port' && \
     echo "conda activate alpa" >> ~/.bashrc
 
 RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
