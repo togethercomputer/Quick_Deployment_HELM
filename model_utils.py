@@ -1,11 +1,38 @@
 import torch
 from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
 from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
+from accelerate import init_empty_weights, infer_auto_device_map
 import logging
 
 logger = logging.getLogger(__name__)
 
-def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=None, auth_token=None, device_map=None, trust_remote_code=False, return_token_type_ids=None):    
+def get_local_huggingface_tokenizer_model(
+        model_name, 
+        model_path=None, 
+        dtype=None, 
+        auth_token=None, 
+        max_memory=None, 
+        trust_remote_code=False, 
+        return_token_type_ids=None, 
+        device=None
+): 
+    if max_memory != {}:
+        config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
+        # load empty weights
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
+        model.tie_weights()
+            
+        #create a device_map from max_memory
+        device_map = infer_auto_device_map(
+            model,
+            max_memory=max_memory,
+            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer"],
+            dtype=dtype,
+        )
+    else:
+        device_map = None
+
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if model_path is not None:
@@ -127,6 +154,10 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
         tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = 'left'
     tokenizer.truncation_side = 'left'
+
+    if max_memory == {}:
+        model = model.to(device)
+
     return model, tokenizer
 
 

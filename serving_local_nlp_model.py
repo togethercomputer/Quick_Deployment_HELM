@@ -14,7 +14,6 @@ from model_utils import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
-from accelerate import init_empty_weights, infer_auto_device_map
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
@@ -75,53 +74,20 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 
             self.tokenizer = tokenizer
         else:
-            if max_memory != {}:
-                config = AutoConfig.from_pretrained(self.hf_model_name, trust_remote_code=trust_remote_code)
-                # load empty weights
-                with init_empty_weights():
-                    model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
-                model.tie_weights()
-                    
-                #create a device_map from max_memory
-                device_map = infer_auto_device_map(
-                    model,
-                    max_memory=max_memory,
-                    no_split_module_classes=["GPTNeoXLayer", "DecoderLayer"],
-                    dtype=args.get('dtype'),
-                )
-            else:
-                device_map = None
+            model, tokenizer = get_local_huggingface_tokenizer_model(
+                args['hf_model_name'], 
+                args['model_path'], 
+                args.get('dtype'), 
+                auth_token=auth_token, 
+                max_memory=max_memory, 
+                trust_remote_code=trust_remote_code, 
+                return_token_type_ids=return_token_type_ids,
+                device=self.device,
+            )
 
-            if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(
-                    args['hf_model_name'], 
-                    args['model_path'], 
-                    args.get('dtype'), 
-                    auth_token=auth_token, 
-                    device_map=device_map, 
-                    trust_remote_code=trust_remote_code, 
-                    return_token_type_ids=return_token_type_ids,
-                    )
-            else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(
-                    args['hf_model_name'],
-                    None, 
-                    args.get('dtype'), 
-                    auth_token=auth_token, 
-                    device_map=device_map, 
-                    trust_remote_code=trust_remote_code, 
-                    return_token_type_ids=return_token_type_ids,
-                    )
-            
-            if max_memory == {}:
-                self.model = model.to(self.device)
-            else:
-                self.model = model
-            
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
-                
+            self.model = model
             self.tokenizer = tokenizer
+
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
         torch.cuda.empty_cache()
@@ -381,7 +347,7 @@ if __name__ == "__main__":
                         help='worker name for together coordinator.')
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
-    parser.add_argument('--model_path', type=str, default='',
+    parser.add_argument('--model_path', type=str, default=None,
                         help='hugging face model path (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
