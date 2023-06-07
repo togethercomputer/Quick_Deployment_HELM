@@ -115,6 +115,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             
             if max_memory == {}:
                 self.model = model.to(self.device)
+            else:
+                self.model = model
             
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
