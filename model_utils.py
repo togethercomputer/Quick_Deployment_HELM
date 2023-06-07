@@ -147,8 +147,8 @@ def get_local_huggingface_tokenizer_model(
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids)
         model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids)
-        model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids, torch_dtype=dtype)
+        model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code, torch_dtype=dtype)
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
