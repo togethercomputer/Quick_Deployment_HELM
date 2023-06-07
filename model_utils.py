@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=None, auth_token=None):    
+def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=None, auth_token=None, device_map=None):    
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         if model_path is not None:
@@ -118,10 +118,10 @@ def get_local_huggingface_tokenizer_model(model_name, model_path=None, dtype=Non
     elif model_path is not None and model_path != "":
         logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=auth_token)
-        model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, use_auth_token=auth_token)
+        model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, use_auth_token=auth_token, device_map=device_map)
     else:
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token)
-        model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token)
+        model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token, device_map=device_map)
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token

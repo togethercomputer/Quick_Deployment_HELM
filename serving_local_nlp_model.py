@@ -14,6 +14,7 @@ from model_utils import *
 from typing import Dict
 from torch.nn.utils.rnn import pad_sequence
 from transformers import AutoTokenizer, AutoConfig, StoppingCriteriaList
+from accelerate import init_empty_weights, infer_auto_device_map
 from together_worker.fast_inference import FastInferenceInterface
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherWeb3, TogetherClientOptions
@@ -61,6 +62,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
         auth_token = args['auth_token']
+        max_memory = args['max_memory']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -71,11 +73,29 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 
             self.tokenizer = tokenizer
         else:
-            if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token)
+            if max_memory != {}:
+                config = AutoConfig.from_pretrained(model_name)
+                # load empty weights
+                with init_empty_weights():
+                    model = AutoModelForCausalLM.from_config(config)
+                model.tie_weights()
+                    
+                #create a device_map from max_memory
+                device_map = infer_auto_device_map(
+                    model,
+                    max_memory=max_memory,
+                    dtype=args.get('dtype'),
+                )
             else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token)
-            self.model = model.to(self.device)
+                device_map = None
+
+            if args['model_path'] != '':
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token, device_map=device_map)
+            else:
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token, device_map=device_map)
+            
+            if max_memory == {}:
+                self.model = model.to(self.device)
             
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
@@ -356,6 +376,14 @@ if __name__ == "__main__":
                         help='plugin.')
     parser.add_argument('--auth-token', action='store_true',
                         help='indicates whether to get auth token from huggingface-cli. Used for private repos.')
+    parser.add_argument(
+        '-g',
+        '--gpu-vram',
+        action='store',
+        help='max VRAM to allocate per GPU',
+        nargs='+',
+        required=False,
+    )
     args = parser.parse_args()
 
     plugin = None
@@ -382,6 +410,14 @@ if __name__ == "__main__":
         http_url=f"http://{coord_url}:{coord_http_port}",
         websocket_url=f"ws://{coord_url}:{coord_ws_port}/websocket"
     )
+
+    max_memory = {}
+    # set max_memory dictionary if given
+    if args.gpu_vram is not None:
+        for i in range(len(args.gpu_vram)):
+            # assign CUDA ID as label and XGiB as value
+            max_memory[int(args.gpu_vram[i].split(':')[0])] = f"{args.gpu_vram[i].split(':')[1]}GiB"
+    
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
@@ -397,5 +433,6 @@ if __name__ == "__main__":
         "deny_list": deny_list,
         "plugin": plugin,
         "auth_token": args.auth_token,
+        "max_memory": max_memory,
     })
     fip.start()
