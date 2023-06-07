@@ -61,6 +61,9 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.max_batch_size = args['max_batch_size']
         self.deny_list = args['deny_list']
         auth_token = args['auth_token']
+        max_memory = args['max_memory']
+        trust_remote_code = args['trust_remote_code']
+        return_token_type_ids = args['return_token_type_ids']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -71,16 +74,20 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 
             self.tokenizer = tokenizer
         else:
-            if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token)
-            else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token)
-            self.model = model.to(self.device)
-            
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
-                
+            model, tokenizer = get_local_huggingface_tokenizer_model(
+                args['hf_model_name'], 
+                args['model_path'], 
+                args.get('dtype'), 
+                auth_token=auth_token, 
+                max_memory=max_memory, 
+                trust_remote_code=trust_remote_code, 
+                return_token_type_ids=return_token_type_ids,
+                device=self.device,
+            )
+
+            self.model = model
             self.tokenizer = tokenizer
+
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
         torch.cuda.empty_cache()
@@ -340,7 +347,7 @@ if __name__ == "__main__":
                         help='worker name for together coordinator.')
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
                         help='hugging face model name (used to load config).')
-    parser.add_argument('--model_path', type=str, default='',
+    parser.add_argument('--model_path', type=str, default=None,
                         help='hugging face model path (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
@@ -356,6 +363,18 @@ if __name__ == "__main__":
                         help='plugin.')
     parser.add_argument('--auth-token', action='store_true',
                         help='indicates whether to get auth token from huggingface-cli. Used for private repos.')
+    parser.add_argument('--trust-remote-code', action='store_true',
+                        help='indicates whether to trust remote code from huggingface models')
+    parser.add_argument('--no-return-token-type-ids', action='store_true',
+                        help='indicates whether to not return token type ids. Used for Falcon models.')
+    parser.add_argument(
+        '-g',
+        '--gpu-vram',
+        action='store',
+        help='max VRAM to allocate per GPU',
+        nargs='+',
+        required=False,
+    )
     args = parser.parse_args()
 
     plugin = None
@@ -382,6 +401,14 @@ if __name__ == "__main__":
         http_url=f"http://{coord_url}:{coord_http_port}",
         websocket_url=f"ws://{coord_url}:{coord_ws_port}/websocket"
     )
+
+    max_memory = {}
+    # set max_memory dictionary if given
+    if args.gpu_vram is not None:
+        for i in range(len(args.gpu_vram)):
+            # assign CUDA ID as label and XGiB as value
+            max_memory[int(args.gpu_vram[i].split(':')[0])] = f"{args.gpu_vram[i].split(':')[1]}GiB"
+    
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
@@ -397,5 +424,8 @@ if __name__ == "__main__":
         "deny_list": deny_list,
         "plugin": plugin,
         "auth_token": args.auth_token,
+        "max_memory": max_memory,
+        "trust_remote_code": args.trust_remote_code,
+        "return_token_type_ids": not args.no_return_token_type_ids,
     })
     fip.start()
