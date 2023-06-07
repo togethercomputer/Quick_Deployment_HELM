@@ -73,26 +73,30 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 
             self.tokenizer = tokenizer
         else:
+            # Note: Falcon models require trust_remote_code=True. Rather than permanently enabling it for all models:
+            trust_remote_code=True if "falcon" in self.hf_model_name else False
+
             if max_memory != {}:
-                config = AutoConfig.from_pretrained(model_name)
+                config = AutoConfig.from_pretrained(self.hf_model_name, trust_remote_code=trust_remote_code)
                 # load empty weights
                 with init_empty_weights():
-                    model = AutoModelForCausalLM.from_config(config)
+                    model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
                 model.tie_weights()
                     
                 #create a device_map from max_memory
                 device_map = infer_auto_device_map(
                     model,
                     max_memory=max_memory,
+                    no_split_module_classes=["GPTNeoXLayer"],
                     dtype=args.get('dtype'),
                 )
             else:
                 device_map = None
 
             if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token, device_map=device_map)
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
             else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token, device_map=device_map)
+                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
             
             if max_memory == {}:
                 self.model = model.to(self.device)
