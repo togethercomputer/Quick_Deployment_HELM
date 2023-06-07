@@ -63,6 +63,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         self.deny_list = args['deny_list']
         auth_token = args['auth_token']
         max_memory = args['max_memory']
+        trust_remote_code = args['trust_remote_code']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -73,9 +74,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 
             self.tokenizer = tokenizer
         else:
-            # Note: Falcon models require trust_remote_code=True. Rather than permanently enabling it for all models:
-            trust_remote_code=True if "falcon" in self.hf_model_name else False
-
             if max_memory != {}:
                 config = AutoConfig.from_pretrained(self.hf_model_name, trust_remote_code=trust_remote_code)
                 # load empty weights
@@ -380,6 +378,8 @@ if __name__ == "__main__":
                         help='plugin.')
     parser.add_argument('--auth-token', action='store_true',
                         help='indicates whether to get auth token from huggingface-cli. Used for private repos.')
+    parser.add_argument('--trust-remote-code', action='store_true',
+                        help='indicates whether to trust remote code from huggingface models')
     parser.add_argument(
         '-g',
         '--gpu-vram',
@@ -438,5 +438,6 @@ if __name__ == "__main__":
         "plugin": plugin,
         "auth_token": args.auth_token,
         "max_memory": max_memory,
+        "trust_remote_code": args.trust_remote_code,
     })
     fip.start()
