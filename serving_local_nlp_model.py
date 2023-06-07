@@ -64,6 +64,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         auth_token = args['auth_token']
         max_memory = args['max_memory']
         trust_remote_code = args['trust_remote_code']
+        return_token_type_ids = args['return_token_type_ids']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -85,16 +86,32 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 device_map = infer_auto_device_map(
                     model,
                     max_memory=max_memory,
-                    no_split_module_classes=["GPTNeoXLayer"],
+                    no_split_module_classes=["GPTNeoXLayer", "DecoderLayer"],
                     dtype=args.get('dtype'),
                 )
             else:
                 device_map = None
 
             if args['model_path'] != '':
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], args['model_path'], args.get('dtype'), auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
+                model, tokenizer = get_local_huggingface_tokenizer_model(
+                    args['hf_model_name'], 
+                    args['model_path'], 
+                    args.get('dtype'), 
+                    auth_token=auth_token, 
+                    device_map=device_map, 
+                    trust_remote_code=trust_remote_code, 
+                    return_token_type_ids=return_token_type_ids,
+                    )
             else:
-                model, tokenizer = get_local_huggingface_tokenizer_model(args['hf_model_name'], None, args.get('dtype'), auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
+                model, tokenizer = get_local_huggingface_tokenizer_model(
+                    args['hf_model_name'],
+                    None, 
+                    args.get('dtype'), 
+                    auth_token=auth_token, 
+                    device_map=device_map, 
+                    trust_remote_code=trust_remote_code, 
+                    return_token_type_ids=return_token_type_ids,
+                    )
             
             if max_memory == {}:
                 self.model = model.to(self.device)
@@ -380,6 +397,8 @@ if __name__ == "__main__":
                         help='indicates whether to get auth token from huggingface-cli. Used for private repos.')
     parser.add_argument('--trust-remote-code', action='store_true',
                         help='indicates whether to trust remote code from huggingface models')
+    parser.add_argument('--no-return-token-type-ids', action='store_true',
+                        help='indicates whether to not return token type ids. Used for Falcon models.')
     parser.add_argument(
         '-g',
         '--gpu-vram',
@@ -439,5 +458,6 @@ if __name__ == "__main__":
         "auth_token": args.auth_token,
         "max_memory": max_memory,
         "trust_remote_code": args.trust_remote_code,
+        "return_token_type_ids": not args.no_return_token_type_ids,
     })
     fip.start()
