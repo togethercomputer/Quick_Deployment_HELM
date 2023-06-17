@@ -419,8 +419,12 @@ if __name__ == "__main__":
         "group_name": args.group_name,
         "max_batch_size": args.max_batch_size,
         "gpu_num":1,
-        "gpu_type":"RTX 3090",
-        "gpu_mem":2400000,
+        "gpu_type": torch.cuda.get_device_name() if torch.cuda.is_available() else None,
+        "gpu_mem": (
+            str(torch.cuda.get_device_properties(torch.cuda.current_device()).total_memory) 
+            if torch.cuda.is_available() 
+            else None
+        ),
         "deny_list": deny_list,
         "plugin": plugin,
         "auth_token": args.auth_token,
