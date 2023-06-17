@@ -10,8 +10,8 @@ from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherClientOptions, TogetherWeb3
 from together_worker.fast_inference import FastInferenceInterface
 
-from model_utils import *
-from utils import *
+import model_utils as mu
+import utils
 
 
 class AlpaDistNLPModelInference(FastInferenceInterface):
@@ -37,7 +37,7 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
             "logprobs": 0,
         }
         self.alpa_model_name = args["alpa_model_name"]
-        model, tokenizer = get_dist_alpa_tokenizer_model(
+        model, tokenizer = mu.get_dist_alpa_tokenizer_model(
             args["alpa_model_name"], args["model_path"]
         )
 
@@ -52,26 +52,30 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
-        self.task_info["seed"] = get_int(args.get("seed", 0), default=0)
+        self.task_info["seed"] = utils.get_int(args.get("seed", 0), default=0)
         self.task_info["prompt_seqs"] = [str(args["prompt"])]
-        self.task_info["output_len"] = get_int(args.get("max_tokens", 16), default=16)
-        self.task_info["beam_width"] = get_int(args.get("beam_width", 1), default=1)
-        self.task_info["top_k"] = get_int(args.get("top_k", 50), default=50)
-        self.task_info["top_p"] = get_float(args.get("top_p", 0.0), default=0.0)
-        self.task_info["beam_search_diversity_rate"] = get_float(
+        self.task_info["output_len"] = utils.get_int(
+            args.get("max_tokens", 16), default=16
+        )
+        self.task_info["beam_width"] = utils.get_int(
+            args.get("beam_width", 1), default=1
+        )
+        self.task_info["top_k"] = utils.get_int(args.get("top_k", 50), default=50)
+        self.task_info["top_p"] = utils.get_float(args.get("top_p", 0.0), default=0.0)
+        self.task_info["beam_search_diversity_rate"] = utils.get_float(
             args.get("beam_search_diversity_rate", 0.0), default=0.0
         )
-        self.task_info["temperature"] = get_float(
+        self.task_info["temperature"] = utils.get_float(
             args.get("temperature", 0.8), default=0.8
         )
-        self.task_info["len_penalty"] = get_float(
+        self.task_info["len_penalty"] = utils.get_float(
             args.get("len_penalty", 0.0), default=0.0
         )
-        self.task_info["repetition_penalty"] = get_float(
+        self.task_info["repetition_penalty"] = utils.get_float(
             args.get("repetition_penalty", 1.0), default=1.0
         )
         self.task_info["stop"] = args.get("stop", [])
-        self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
+        self.task_info["logprobs"] = utils.get_int(args.get("logprobs", 0), default=0)
 
         if (
             len(self.task_info["prompt_seqs"][0]) == 0
@@ -144,7 +148,7 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
                     output_hidden_states=False,  # return embeddings
                 )
             if output_scores:
-                logprobs = convert_hf_score_to_logprobs(
+                logprobs = utils.convert_hf_score_to_logprobs(
                     outputs.scores, self.task_info["logprobs"], self.tokenizer
                 )
             else:
@@ -168,7 +172,7 @@ class AlpaDistNLPModelInference(FastInferenceInterface):
                 f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n"
             )
             choice = {
-                "text": post_processing_text(output, self.task_info["stop"]),
+                "text": utils.post_processing_text(output, self.task_info["stop"]),
                 "index": beam_id,
                 "finish_reason": "length",
             }

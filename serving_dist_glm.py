@@ -2,14 +2,24 @@ import logging
 import math
 import os
 import random
+import time
 from typing import Dict
 
+import numpy as np
+import torch
+import torch.distributed as dist
 from together_web3.computer import RequestTypeLanguageModelInference
 from together_web3.together import TogetherClientOptions, TogetherWeb3
 from together_worker.fast_inference import FastInferenceInterface
 
-from glm_utils import *
-from utils import *
+import utils
+from glm_utils import (
+    BaseStrategy,
+    fill_blanks_efficient,
+    initialize,
+    initialize_model_and_tokenizer,
+    to_result,
+)
 
 
 class DistGLMInference(FastInferenceInterface):
@@ -17,7 +27,7 @@ class DistGLMInference(FastInferenceInterface):
         try:
             if not dist.is_initialized():
                 dist.init_process_group(backend="mpi")
-        except:
+        except Exception:
             print("[INFO] WARNING: Have initialized the process group")
         args["worker_name"] = "worker" + str(dist.get_rank())
         args["workers"] = dist.get_world_size()
@@ -56,17 +66,21 @@ class DistGLMInference(FastInferenceInterface):
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
-        self.task_info["seed"] = get_int(args.get("seed", 0), default=0)
+        self.task_info["seed"] = utils.get_int(args.get("seed", 0), default=0)
         self.task_info["prompt_seqs"] = [str(args["prompt"])]
-        self.task_info["max_tokens"] = get_int(args.get("max_tokens", 16), default=16)
-        self.task_info["beam_width"] = get_int(args.get("beam_width", 1), default=1)
-        self.task_info["top_k"] = get_int(args.get("top_k", 50), default=50)
-        self.task_info["top_p"] = get_float(args.get("top_p", 0.0), default=0.0)
-        self.task_info["temperature"] = get_float(
+        self.task_info["max_tokens"] = utils.get_int(
+            args.get("max_tokens", 16), default=16
+        )
+        self.task_info["beam_width"] = utils.get_int(
+            args.get("beam_width", 1), default=1
+        )
+        self.task_info["top_k"] = utils.get_int(args.get("top_k", 50), default=50)
+        self.task_info["top_p"] = utils.get_float(args.get("top_p", 0.0), default=0.0)
+        self.task_info["temperature"] = utils.get_float(
             args.get("temperature", 0.8), default=0.8
         )
         self.task_info["stop"] = args.get("stop", [])
-        self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
+        self.task_info["logprobs"] = utils.get_int(args.get("logprobs", 0), default=0)
 
         if (
             len(self.task_info["prompt_seqs"][0]) == 0

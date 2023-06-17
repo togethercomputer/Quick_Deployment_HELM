@@ -1,8 +1,9 @@
 import argparse
 
+import torch
 from transformers import StoppingCriteriaList
 
-from model_utils import *
+import model_utils as mu
 from utils import StopWordsCriteria
 
 
@@ -51,7 +52,7 @@ def test_model(args):
     print("<test_model> initialization start")
     device = torch.device(args.get("device", "cuda"))
     assert args["model_path"] != ""
-    model, tokenizer = get_local_huggingface_tokenizer_model(
+    model, tokenizer = mu.get_local_huggingface_tokenizer_model(
         args["hf_model_name"], args["model_path"], args.get("dtype")
     )
     model = model.to(device)

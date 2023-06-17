@@ -14,9 +14,9 @@ from together_web3.together import TogetherClientOptions, TogetherWeb3
 from together_worker.fast_inference import FastInferenceInterface
 from transformers import StoppingCriteriaList
 
-from faiss_retrieval import *
-from model_utils import *
-from utils import *
+import faiss_retrieval as fr
+import model_utils as mu
+import utils
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         return_token_type_ids = args["return_token_type_ids"]
 
         if args.get("dtype") == "llm.int8":
-            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(
+            model, tokenizer = mu.get_local_huggingface_tokenizer_model_llm_int8(
                 args["hf_model_name"], args["model_path"], None, auth_token=auth_token
             )
             self.model = model  # int8 cannot do .to(device)
@@ -79,7 +79,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
 
             self.tokenizer = tokenizer
         else:
-            model, tokenizer = get_local_huggingface_tokenizer_model(
+            model, tokenizer = mu.get_local_huggingface_tokenizer_model(
                 args["hf_model_name"],
                 args["model_path"],
                 args.get("dtype"),
@@ -108,7 +108,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         args = args[0]
         args = {k: v for k, v in args.items() if v is not None}
         # Inputs
-        self.task_info["seed"] = get_int(args.get("seed", 0), default=0)
+        self.task_info["seed"] = utils.get_int(args.get("seed", 0), default=0)
         if isinstance(str(args["prompt"]), str):
             self.task_info["prompt_seqs"] = [str(args["prompt"])]
         elif isinstance(str(args["prompt"]), list):
@@ -116,27 +116,35 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         else:
             logging.debug("wrong prompt format, it can only be str or list of str")
             return
-        self.task_info["output_len"] = get_int(args.get("max_tokens", 16), default=16)
-        self.task_info["beam_width"] = get_int(args.get("beam_width", 1), default=1)
-        self.task_info["top_k"] = get_int(args.get("top_k", 50), default=50)
+        self.task_info["output_len"] = utils.get_int(
+            args.get("max_tokens", 16), default=16
+        )
+        self.task_info["beam_width"] = utils.get_int(
+            args.get("beam_width", 1), default=1
+        )
+        self.task_info["top_k"] = utils.get_int(args.get("top_k", 50), default=50)
         if self.hf_model_name == "google/flan-t5-xxl":
-            self.task_info["top_p"] = get_float(args.get("top_p", 1.0), default=1.0)
+            self.task_info["top_p"] = utils.get_float(
+                args.get("top_p", 1.0), default=1.0
+            )
         else:
-            self.task_info["top_p"] = get_float(args.get("top_p", 0.0), default=0.0)
-        self.task_info["beam_search_diversity_rate"] = get_float(
+            self.task_info["top_p"] = utils.get_float(
+                args.get("top_p", 0.0), default=0.0
+            )
+        self.task_info["beam_search_diversity_rate"] = utils.get_float(
             args.get("beam_search_diversity_rate", 0.0), default=0.0
         )
-        self.task_info["temperature"] = get_float(
+        self.task_info["temperature"] = utils.get_float(
             args.get("temperature", 0.8), default=0.8
         )
-        self.task_info["len_penalty"] = get_float(
+        self.task_info["len_penalty"] = utils.get_float(
             args.get("len_penalty", 0.0), default=0.0
         )
-        self.task_info["repetition_penalty"] = get_float(
+        self.task_info["repetition_penalty"] = utils.get_float(
             args.get("repetition_penalty", 1.0), default=1.0
         )
         self.task_info["stop"] = args.get("stop", [])
-        self.task_info["logprobs"] = get_int(args.get("logprobs", 0), default=0)
+        self.task_info["logprobs"] = utils.get_int(args.get("logprobs", 0), default=0)
 
         if args.get("stream_tokens"):
             self.task_info["stream_tokens"] = lambda token: self.stream_tokens(
@@ -237,7 +245,11 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_hidden_states=True,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
                         stopping_criteria=StoppingCriteriaList(
-                            [StopWordsCriteria(self.task_info["stop"], self.tokenizer)]
+                            [
+                                utils.StopWordsCriteria(
+                                    self.task_info["stop"], self.tokenizer
+                                )
+                            ]
                         )
                         if self.task_info.get("stop")
                         else None,
@@ -277,9 +289,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         logprobs_dict["token_logprobs"].append(
                             logprobs[0, i, selected_token_id].item()
                         )
-                        logprobs_dict["top_logprobs"].append(
-                            dict(zip(tokens, scores))
-                        )
+                        logprobs_dict["top_logprobs"].append(dict(zip(tokens, scores)))
 
                     logprobs_buffer.append(logprobs_dict)
 
@@ -307,7 +317,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                     f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n"
                 )
                 choice = {
-                    "text": post_processing_text(
+                    "text": utils.post_processing_text(
                         output, self.task_info["stop"], self.deny_list
                     ),
                     "index": beam_id,
@@ -339,7 +349,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output = self.tokenizer.decode(token)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
-                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
+                            "text": utils.post_processing_text(output, self.task_info["stop"], self.deny_list),
                             "index": beam_id,
                             "finish_reason": "length"
                         }
@@ -375,7 +385,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n"
                         )
                         choice = {
-                            "text": post_processing_text(
+                            "text": utils.post_processing_text(
                                 output, self.task_info["stop"], self.deny_list
                             ),
                             "index": beam_id,
@@ -466,7 +476,7 @@ if __name__ == "__main__":
 
     plugin = None
     if args.plugin == "faiss_retrieval":
-        plugin = FaissRetrievalPlugin()
+        plugin = fr.FaissRetrievalPlugin()
 
     coord_url = os.environ.get("COORD_URL", "127.0.0.1")
     coord_http_port = os.environ.get("COORD_HTTP_PORT", "8092")
@@ -503,7 +513,7 @@ if __name__ == "__main__":
         args={
             "coordinator": coordinator,
             "device": args.device,
-            "dtype": torch_dtype_from_dtype(args.dtype) if args.dtype else None,
+            "dtype": utils.torch_dtype_from_dtype(args.dtype) if args.dtype else None,
             "hf_model_name": args.hf_model_name,
             "model_path": args.model_path,
             "worker_name": args.worker_name,
