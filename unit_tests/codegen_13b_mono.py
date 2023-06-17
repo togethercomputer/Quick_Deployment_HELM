@@ -1,5 +1,6 @@
 import requests
 
+
 prompt = "def hello_world():"
 top_p = 1.0
 temperature = 0.5
@@ -13,9 +14,11 @@ my_post_dict = {
     "temperature": float(temperature),
     "max_tokens": int(max_new_tokens),
     "stop": [],
-    #"logprobs": 3
+    # "logprobs": 3
 }
 
 print(my_post_dict)
-response = requests.get("https://staging.together.xyz/api/inference", params=my_post_dict).json()
+response = requests.get(
+    "https://staging.together.xyz/api/inference", params=my_post_dict
+).json()
 print(response)

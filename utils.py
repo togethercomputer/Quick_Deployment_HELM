@@ -1,6 +1,7 @@
-import torch
-import timeit
 import logging
+import timeit
+
+import torch
 from transformers import StoppingCriteria
 
 
@@ -9,7 +10,7 @@ def get_int(input_: str, default=0) -> int:
         my_num = int(input_)
         return my_num
     except ValueError:
-        logging.debug(f'Invalid int {input_} set to default: {default}')
+        logging.debug(f"Invalid int {input_} set to default: {default}")
         return default
 
 
@@ -17,9 +18,11 @@ class StopWordsCriteria(StoppingCriteria):
     def __init__(self, stop_words, tokenizer):
         self.tokenizer = tokenizer
         self.stop_words = stop_words
-        self._cache_str = ''
+        self._cache_str = ""
 
-    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def __call__(
+        self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+    ) -> bool:
         self._cache_str += self.tokenizer.decode(input_ids[0, -1])
         for stop_words in self.stop_words:
             if stop_words in self._cache_str:
@@ -32,15 +35,16 @@ def get_float(input_: str, default=0.0) -> float:
         my_num = float(input_)
         return my_num
     except ValueError:
-        logging.debug(f'Invalid float {input_} set to default: {default}')
+        logging.debug(f"Invalid float {input_} set to default: {default}")
         return default
 
-def post_processing_text(output_text, stop_tokens, denylist = []):
+
+def post_processing_text(output_text, stop_tokens, denylist=[]):
     logging.debug(f"<post_processing_text> output_text: {output_text}")
 
     filtered_stop_tokens = []
     for token in stop_tokens:
-        if token != '':
+        if token != "":
             filtered_stop_tokens.append(token)
 
     logging.debug(f"<post_processing_text> stop_tokens: {filtered_stop_tokens}.")
@@ -75,9 +79,13 @@ def convert_hf_score_to_logprobs(scores, k, tokenizer):
 
     for i in range(batch_size):
         logprobs = []
-        for current_step_score in scores[i:i+1]:
-            value, indices = torch.topk(torch.log_softmax(torch.squeeze(current_step_score.float()), dim=-1), k)
-            current_logprob = list(zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist()))
+        for current_step_score in scores[i : i + 1]:
+            value, indices = torch.topk(
+                torch.log_softmax(torch.squeeze(current_step_score.float()), dim=-1), k
+            )
+            current_logprob = list(
+                zip(tokenizer.convert_ids_to_tokens(indices.tolist()), value.tolist())
+            )
             logprobs.append(current_logprob)
         results.append(logprobs)
     return results
