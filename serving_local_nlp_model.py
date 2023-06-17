@@ -419,7 +419,7 @@ if __name__ == "__main__":
         "group_name": args.group_name,
         "max_batch_size": args.max_batch_size,
         "gpu_num":1,
-        "gpu_type": torch.cuda.get_device_name(device="cuda:0"),
+        "gpu_type": torch.cuda.get_device_name(),
         "gpu_mem": str(int(torch.cuda.mem_get_info()[-1]/1024)),
         "deny_list": deny_list,
         "plugin": plugin,
