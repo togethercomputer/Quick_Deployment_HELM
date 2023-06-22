@@ -357,7 +357,7 @@ if __name__ == "__main__":
                         help='batch inference, the max batch for .')
     parser.add_argument('--device', type=str, default="cuda",
                         help='device.')
-    parser.add_argument('--dtype', type=str, default="",
+    parser.add_argument('--dtype', type=str, default="fp16",
                         help='dtype.')
     parser.add_argument('--plugin', type=str, default="",
                         help='plugin.')
