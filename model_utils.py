@@ -144,10 +144,10 @@ def get_local_huggingface_tokenizer_model(
             assert False
     elif model_path is not None and model_path != "":
         logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
-        tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids, trust_remote_code=trust_remote_code)
         model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids, torch_dtype=dtype)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token, return_token_type_ids=return_token_type_ids, torch_dtype=dtype, trust_remote_code=trust_remote_code)
         model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code, torch_dtype=dtype)
 
     if tokenizer.pad_token is None:
