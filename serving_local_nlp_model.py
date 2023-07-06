@@ -63,7 +63,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         auth_token = args['auth_token']
         max_memory = args['max_memory']
         trust_remote_code = args['trust_remote_code']
-        return_token_type_ids = args['return_token_type_ids']
+        self.return_token_type_ids = args['return_token_type_ids']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -81,7 +81,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 auth_token=auth_token, 
                 max_memory=max_memory, 
                 trust_remote_code=trust_remote_code, 
-                return_token_type_ids=return_token_type_ids,
+                return_token_type_ids=self.return_token_type_ids,
                 device=self.device,
             )
 
@@ -174,6 +174,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 logprobs_buffer = []
             else:
                 logprobs_buffer = None
+
+            # fixes error on Falcon models
+            if self.return_token_type_ids is False:
+                self.tokenizer.return_token_type_ids = False
 
             time = timeit.default_timer()
             for iter_i in range(num_iter):
