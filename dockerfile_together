@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 nvidia/cuda:11.3.0-cudnn8-devel-ubuntu20.04
+FROM --platform=linux/amd64 nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
