@@ -88,6 +88,10 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             self.model = model
             self.tokenizer = tokenizer
 
+        # fixes error on Falcon models
+        if self.return_token_type_ids is False:
+            self.tokenizer.return_token_type_ids = False
+
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
         torch.cuda.empty_cache()
@@ -174,10 +178,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 logprobs_buffer = []
             else:
                 logprobs_buffer = None
-
-            # fixes error on Falcon models
-            if self.return_token_type_ids is False:
-                self.tokenizer.return_token_type_ids = False
 
             time = timeit.default_timer()
             for iter_i in range(num_iter):
