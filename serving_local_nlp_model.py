@@ -8,6 +8,7 @@ import random
 import logging
 import argparse
 import numpy as np
+from functools import wraps
 from faiss_retrieval import *
 from utils import *
 from model_utils import *
@@ -63,7 +64,8 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         auth_token = args['auth_token']
         max_memory = args['max_memory']
         trust_remote_code = args['trust_remote_code']
-        self.return_token_type_ids = args['return_token_type_ids']
+        no_return_token_type_ids = args['no_return_token_type_ids']
+        self.skip_special_tokens = args['skip_special_tokens']
         
         if args.get('dtype') == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
@@ -81,16 +83,23 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 auth_token=auth_token, 
                 max_memory=max_memory, 
                 trust_remote_code=trust_remote_code, 
-                return_token_type_ids=self.return_token_type_ids,
                 device=self.device,
             )
 
             self.model = model
             self.tokenizer = tokenizer
 
-        # fixes error on Falcon models
-        if self.return_token_type_ids is False:
-            self.tokenizer.return_token_type_ids = False
+        # fix for The following `model_kwargs` are not used by the model: ['token_type_ids'] 
+        # credit: https://huggingface.co/tiiuae/falcon-7b-instruct/discussions/2#6481fe4e9135a74ca541b310
+        if no_return_token_type_ids:
+            tok_call_one = self.tokenizer._call_one
+    
+            @wraps(tok_call_one)
+            def _call_one_wrapped(*x, **y):
+                y['return_token_type_ids'] = False
+                return tok_call_one(*x, **y)
+            
+            self.tokenizer._call_one = _call_one_wrapped
 
         self.plugin = args.get('plugin')
         torch.manual_seed(0)
@@ -262,7 +271,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 else:
                     token = outputs.sequences[beam_id, input_length:]  # exclude context input from the output
                 logging.debug(f"[INFO] raw token: {token}")
-                output = self.tokenizer.decode(token)
+                output = self.tokenizer.decode(token, skip_special_tokens=self.skip_special_tokens)
                 logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                 choice = {
                     "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
@@ -321,7 +330,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                             # exclude context input from the output
                             token = outputs.sequences[sample_id * beam_width + beam_id, input_length:]
                         logging.debug(f"[INFO] raw token: {token}")
-                        output = self.tokenizer.decode(token)
+                        output = self.tokenizer.decode(token, skip_special_tokens=self.skip_special_tokens)
                         logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
                         choice = {
                             "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
@@ -371,6 +380,8 @@ if __name__ == "__main__":
                         help='indicates whether to trust remote code from huggingface models')
     parser.add_argument('--no-return-token-type-ids', action='store_true',
                         help='indicates whether to not return token type ids. Used for Falcon models.')
+    parser.add_argument('--skip-special-tokens', action='store_true',
+                        help='indicates whether to not to skip special tokens. Used for NSQL-like models.')
     parser.add_argument(
         '-g',
         '--gpu-vram',
@@ -434,6 +445,7 @@ if __name__ == "__main__":
         "auth_token": args.auth_token,
         "max_memory": max_memory,
         "trust_remote_code": args.trust_remote_code,
-        "return_token_type_ids": not args.no_return_token_type_ids,
+        "no_return_token_type_ids": args.no_return_token_type_ids,
+        "skip_special_tokens": args.skip_special_tokens,
     })
     fip.start()
