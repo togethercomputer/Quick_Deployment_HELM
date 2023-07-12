@@ -30,6 +30,7 @@ RUN pip3 install --no-cache-dir \
       sentencepiece \
       together_worker \
       uvicorn \
+      peft \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
       'transformers @ git+https://github.com/togethercomputer/transformers_port'
 

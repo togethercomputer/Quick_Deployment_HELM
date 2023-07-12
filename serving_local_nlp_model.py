@@ -66,8 +66,11 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         trust_remote_code = args['trust_remote_code']
         no_return_token_type_ids = args['no_return_token_type_ids']
         self.skip_special_tokens = args['skip_special_tokens']
-        
-        if args.get('dtype') == 'llm.int8':
+        lora_adapters = args['lora_adapters']
+        quantize = args['quantize']   # bool
+        dtype = args['dtype']
+
+        if dtype == 'llm.int8':
             model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
             self.model = model # int8 cannot do .to(device)
             
@@ -79,11 +82,13 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             model, tokenizer = get_local_huggingface_tokenizer_model(
                 args['hf_model_name'], 
                 args['model_path'], 
-                args.get('dtype'), 
+                dtype,
                 auth_token=auth_token, 
                 max_memory=max_memory, 
                 trust_remote_code=trust_remote_code, 
                 device=self.device,
+                lora_adapters=lora_adapters,
+                quantize=quantize,
             )
 
             self.model = model
@@ -381,7 +386,10 @@ if __name__ == "__main__":
     parser.add_argument('--no-return-token-type-ids', action='store_true',
                         help='indicates whether to not return token type ids. Used for Falcon models.')
     parser.add_argument('--skip-special-tokens', action='store_true',
-                        help='indicates whether to not to skip special tokens. Used for NSQL-like models.')
+                        help='indicates whether to skip special tokens. Used for NSQL-like models.')
+    parser.add_argument('--lora-adapters', type=str, default="", help='LoRA adapter name to add on top of base model')
+    parser.add_argument('--quantize', action='store_true',
+                        help='indicates whether to load the model with 4-bit quantization')
     parser.add_argument(
         '-g',
         '--gpu-vram',
@@ -424,6 +432,10 @@ if __name__ == "__main__":
             # assign CUDA ID as label and XGiB as value
             max_memory[int(args.gpu_vram[i].split(':')[0])] = f"{args.gpu_vram[i].split(':')[1]}GiB"
     
+    # 4-bit quantization requires bfloat16
+    if args.quantize:
+        args.dtype = "bf16"
+
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
@@ -447,5 +459,7 @@ if __name__ == "__main__":
         "trust_remote_code": args.trust_remote_code,
         "no_return_token_type_ids": args.no_return_token_type_ids,
         "skip_special_tokens": args.skip_special_tokens,
+        "lora_adapters": args.lora_adapters,
+        "quantize": args.quantize,
     })
     fip.start()
