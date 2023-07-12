@@ -364,7 +364,7 @@ if __name__ == "__main__":
     parser.add_argument('--together_model_name', type=str, default=os.environ.get('SERVICE', 'Together-gpt-JT-6B-v1'),
                         help='worker name for together coordinator.')
     parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
-                        help='hugging face model name (used to load config).')
+                        help='hugging face model name (used to load config). Can also be LoRA adapters if --lora-base is passed.')
     parser.add_argument('--model_path', type=str, default=None,
                         help='hugging face model path (used to load config).')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
@@ -387,7 +387,7 @@ if __name__ == "__main__":
                         help='indicates whether to not return token type ids. Used for Falcon models.')
     parser.add_argument('--skip-special-tokens', action='store_true',
                         help='indicates whether to skip special tokens. Used for NSQL-like models.')
-    parser.add_argument('--lora-adapters', type=str, default="", help='LoRA adapter name to add on top of base model')
+    parser.add_argument('--lora-base', type=str, default="", help='LoRA base model name to add the hf_model_name adapters to')
     parser.add_argument('--quantize', action='store_true',
                         help='indicates whether to load the model with 4-bit quantization')
     parser.add_argument(
@@ -436,11 +436,18 @@ if __name__ == "__main__":
     if args.quantize:
         args.dtype = "bf16"
 
+    if args.lora_base != "":
+        base_model = args.lora_base
+        lora_adapters = args.hf_model_name
+    else:
+        base_model = args.hf_model_name
+        lora_adapters = ""
+
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
         "dtype": torch_dtype_from_dtype(args.dtype) if args.dtype else None,
-        "hf_model_name": args.hf_model_name,
+        "hf_model_name": base_model,
         "model_path": args.model_path,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
@@ -459,7 +466,7 @@ if __name__ == "__main__":
         "trust_remote_code": args.trust_remote_code,
         "no_return_token_type_ids": args.no_return_token_type_ids,
         "skip_special_tokens": args.skip_special_tokens,
-        "lora_adapters": args.lora_adapters,
+        "lora_adapters": lora_adapters,
         "quantize": args.quantize,
     })
     fip.start()

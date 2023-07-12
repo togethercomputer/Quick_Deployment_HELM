@@ -196,7 +196,7 @@ def get_local_huggingface_tokenizer_model(
     if lora_adapters != "":
         model = PeftModel.from_pretrained(model, lora_adapters)
 
-    if max_memory == {}:
+    if max_memory == {} or lora_adapters != "":
         model = model.to(device)
 
     return model, tokenizer
