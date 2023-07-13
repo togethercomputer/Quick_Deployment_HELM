@@ -201,7 +201,7 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
                 model, model_path+'/opt-iml-regular.pt', device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
             )
             tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
-    elif model_name in == "huggyllama/llama-65b":
+    elif model_name == "huggyllama/llama-65b":
         config = AutoConfig.from_pretrained(model_path)
         with init_empty_weights():
             model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
@@ -211,7 +211,7 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
         )
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         tokenizer.pad_token = tokenizer.eos_token
-    elif model_name in == "tiiuae/falcon-40b" or model_name in == "tiiuae/falcon-40b-instruct":
+    elif model_name == "tiiuae/falcon-40b" or model_name == "tiiuae/falcon-40b-instruct":
         config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
         with init_empty_weights():
             model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16, trust_remote_code=True)
