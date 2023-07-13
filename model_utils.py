@@ -38,11 +38,11 @@ def get_local_huggingface_tokenizer_model(
     if quantize:
         load_in_4bit = True
         quantization_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.bfloat16,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type='nf4'
-            )
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type='nf4'
+        )
     else:
         load_in_4bit = False
         quantization_config = None
