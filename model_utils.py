@@ -185,7 +185,7 @@ def get_local_huggingface_tokenizer_model(
             torch_dtype=dtype,
             load_in_4bit=load_in_4bit,
             quantization_config=quantization_config,
-            )
+        )
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
