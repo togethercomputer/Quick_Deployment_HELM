@@ -90,6 +90,12 @@ def get_local_huggingface_tokenizer_model(
     elif model_name == 'EleutherAI/gpt-neox-20b':
         tokenizer = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
         model = AutoModelForCausalLM.from_pretrained("EleutherAI/gpt-neox-20b", torch_dtype=torch.float16)
+    elif model_name == 'togethercomputer/instructcodet5p-16b':
+        tokenizer = AutoTokenizer.from_pretrained("togethercomputer/instructcodet5p-16b")
+        model = AutoModelForCausalLM.from_pretrained("togethercomputer/instructcodet5p-16b", 
+                                                     torch_dtype=torch.float16,
+                                                      low_cpu_mem_usage=True,
+                                                      trust_remote_code=True)
 
     # DataBricks models
     elif model_name == 'databricks/dolly-v2-3b':
