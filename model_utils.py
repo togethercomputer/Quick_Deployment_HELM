@@ -42,13 +42,13 @@ def get_local_huggingface_tokenizer_model(
     elif model_name == 'facebook/opt-350m':
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-350m")
         model = AutoModelForCausalLM.from_pretrained("facebook/opt-350m", torch_dtype=(dtype if dtype else torch.float16))
-    elif model_name == 'google/flan-t5-xxl':
+    elif model_name in ['google/flan-t5-xxl', 'Salesforce/instructcodet5p-16b', 'google/flan-t5-xl', 'lmsys/fastchat-t5-3b-v1.0']:
         tokenizer = T5Tokenizer.from_pretrained(model_name)
         if model_path is not None:
             print(f"<get_local_huggingface_tokenizer_model> Load from path: {model_path}")
             model = T5ForConditionalGeneration.from_pretrained(model_path, torch_dtype=torch.bfloat16)
         else:
-            model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-xxl", torch_dtype=torch.bfloat16)
+            model = T5ForConditionalGeneration.from_pretrained(model_name, torch_dtype=torch.bfloat16)
     elif model_name == 'facebook/opt-iml-30b':
         tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
         if model_path is not None:
