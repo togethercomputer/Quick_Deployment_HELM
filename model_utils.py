@@ -201,6 +201,26 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
                 model, model_path+'/opt-iml-regular.pt', device_map="auto", no_split_module_classes=["OPTDecoderLayer"]
             )
             tokenizer = AutoTokenizer.from_pretrained("facebook/opt-iml-30b", use_fast=False)
+    elif model_name in == "huggyllama/llama-65b":
+        config = AutoConfig.from_pretrained(model_path)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
+        model.tie_weights()
+        model = load_checkpoint_and_dispatch(
+            model, model_path, device_map="auto", no_split_module_classes=["LlamaDecoderLayer"]
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer.pad_token = tokenizer.eos_token
+    elif model_name in == "tiiuae/falcon-40b" or model_name in == "tiiuae/falcon-40b-instruct":
+        config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16, trust_remote_code=True)
+        model.tie_weights()
+        model = load_checkpoint_and_dispatch(
+            model, model_path, device_map="auto", no_split_module_classes=["FalconDecoderLayer"]
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        tokenizer.pad_token = tokenizer.eos_token
     else:
         assert False, f"Not legal name {model_name}"
     print(f"<get_dist_accelerate_tokenizer_model>: {model_name} hf_device_map")
