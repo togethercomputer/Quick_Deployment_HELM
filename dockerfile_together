@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
 
 RUN pip3 install --no-cache-dir \
-      git+https://github.com/huggingface/accelerate.git \
+      git+https://github.com/huggingface/accelerate.git@5b9c5881b687af1c7a8807aa20ac4a6b36f085c9 \
       alpa \
       bitsandbytes \
       einops \
@@ -30,7 +30,7 @@ RUN pip3 install --no-cache-dir \
       sentencepiece \
       together_worker \
       uvicorn \
-      git+https://github.com/huggingface/peft.git \
+      git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
       'transformers @ git+https://github.com/togethercomputer/transformers_port'
