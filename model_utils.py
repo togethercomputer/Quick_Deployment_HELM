@@ -1,7 +1,8 @@
 import torch
-from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
+from transformers import AutoModelForCausalLM, T5Tokenizer, T5ForConditionalGeneration, AutoModelForSeq2SeqLM, BitsAndBytesConfig
 from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
 from accelerate import init_empty_weights, infer_auto_device_map
+from peft import PeftModel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,9 @@ def get_local_huggingface_tokenizer_model(
         auth_token=None, 
         max_memory=None, 
         trust_remote_code=False, 
-        device=None
+        device=None,
+        lora_adapters="",
+        quantize=False,
 ): 
     if max_memory != {}:
         config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
@@ -31,6 +34,18 @@ def get_local_huggingface_tokenizer_model(
         )
     else:
         device_map = None
+
+    if quantize:
+        load_in_4bit = True
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type='nf4'
+        )
+    else:
+        load_in_4bit = False
+        quantization_config = None
 
     if model_name.startswith('Salesforce/codegen'):
         tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -143,18 +158,45 @@ def get_local_huggingface_tokenizer_model(
             assert False
     elif model_path is not None and model_path != "":
         logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
-        tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token=auth_token, trust_remote_code=trust_remote_code)
-        model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_path,
+            use_auth_token=auth_token,
+            trust_remote_code=trust_remote_code
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            model_path,
+            torch_dtype=torch.float16,
+            use_auth_token=auth_token,
+            device_map=device_map,
+            trust_remote_code=trust_remote_code
+        )
     else:
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=auth_token, torch_dtype=dtype, trust_remote_code=trust_remote_code)
-        model = AutoModelForCausalLM.from_pretrained(model_name, use_auth_token=auth_token, device_map=device_map, trust_remote_code=trust_remote_code, torch_dtype=dtype)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            use_auth_token=auth_token,
+            torch_dtype=dtype,
+            trust_remote_code=trust_remote_code
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            use_auth_token=auth_token,
+            device_map=device_map if lora_adapters != "" else None,
+            trust_remote_code=trust_remote_code,
+            torch_dtype=dtype,
+            load_in_4bit=load_in_4bit,
+            quantization_config=quantization_config,
+        )
 
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
+
     tokenizer.padding_side = 'left'
     tokenizer.truncation_side = 'left'
 
-    if max_memory == {}:
+    if lora_adapters != "":
+        model = PeftModel.from_pretrained(model, lora_adapters)
+
+    if max_memory == {} or lora_adapters != "":
         model = model.to(device)
 
     return model, tokenizer
