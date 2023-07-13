@@ -169,7 +169,7 @@ def get_local_huggingface_tokenizer_model(
             use_auth_token=auth_token,
             device_map=device_map,
             trust_remote_code=trust_remote_code
-            )
+        )
     else:
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
