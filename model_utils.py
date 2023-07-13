@@ -211,7 +211,7 @@ def get_dist_accelerate_tokenizer_model(model_name, model_path):
         )
         tokenizer = AutoTokenizer.from_pretrained(model_path)
         tokenizer.pad_token = tokenizer.eos_token
-    elif model_name == "tiiuae/falcon-40b" or model_name == "tiiuae/falcon-40b-instruct":
+    elif model_name == "together/falcon-40b" or model_name == "together/falcon-40b-instruct":
         config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
         with init_empty_weights():
             model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16, trust_remote_code=True)
