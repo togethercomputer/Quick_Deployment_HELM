@@ -162,7 +162,7 @@ def get_local_huggingface_tokenizer_model(
             model_path,
             use_auth_token=auth_token,
             trust_remote_code=trust_remote_code
-            )
+        )
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
             torch_dtype=torch.float16,
