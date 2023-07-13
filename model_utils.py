@@ -29,7 +29,7 @@ def get_local_huggingface_tokenizer_model(
         device_map = infer_auto_device_map(
             model,
             max_memory=max_memory,
-            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer"],
+            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
             dtype=dtype,
         )
     else:
