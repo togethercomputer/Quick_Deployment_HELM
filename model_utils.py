@@ -18,23 +18,6 @@ def get_local_huggingface_tokenizer_model(
         lora_adapters="",
         quantize=False,
 ): 
-    if max_memory != {}:
-        config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
-        # load empty weights
-        with init_empty_weights():
-            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
-        model.tie_weights()
-            
-        #create a device_map from max_memory
-        device_map = infer_auto_device_map(
-            model,
-            max_memory=max_memory,
-            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
-            dtype=dtype,
-        )
-    else:
-        device_map = None
-
     if quantize:
         load_in_4bit = True
         quantization_config = BitsAndBytesConfig(
@@ -173,10 +156,26 @@ def get_local_huggingface_tokenizer_model(
             model_path,
             torch_dtype=torch.float16,
             use_auth_token=auth_token,
-            device_map=device_map,
             trust_remote_code=trust_remote_code
         )
     else:
+        if max_memory == {}:
+            max_memory = None
+
+        config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
+        # load empty weights
+        with init_empty_weights():
+            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
+        model.tie_weights()
+    
+        #create a device_map from max_memory
+        device_map = infer_auto_device_map(
+            model,
+            max_memory=max_memory,
+            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
+            dtype=dtype,
+        )
+                
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             use_auth_token=auth_token,
