@@ -186,7 +186,7 @@ def get_local_huggingface_tokenizer_model(
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             use_auth_token=auth_token,
-            device_map=device_map if lora_adapters != "" else None,
+            device_map=device_map if lora_adapters == "" else None,
             trust_remote_code=trust_remote_code,
             torch_dtype=dtype,
             load_in_4bit=load_in_4bit,
