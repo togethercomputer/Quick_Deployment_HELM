@@ -4,6 +4,8 @@ from transformers import AutoConfig, AutoTokenizer, OPTForCausalLM
 from accelerate import init_empty_weights, infer_auto_device_map
 from peft import PeftModel
 import logging
+from huggingface_hub import snapshot_download, login
+
 
 logger = logging.getLogger(__name__)
 
@@ -177,6 +179,10 @@ def get_local_huggingface_tokenizer_model(
             trust_remote_code=trust_remote_code
         )
     else:
+        login(token=auth_token)
+        # pre-download the model with 8 parallel workers
+        weights_path = snapshot_download(repo_id=model_name)
+            
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             use_auth_token=auth_token,
@@ -184,7 +190,7 @@ def get_local_huggingface_tokenizer_model(
             trust_remote_code=trust_remote_code
         )
         model = AutoModelForCausalLM.from_pretrained(
-            model_name,
+            weights_path,
             use_auth_token=auth_token,
             device_map=device_map if lora_adapters == "" else None,
             trust_remote_code=trust_remote_code,
