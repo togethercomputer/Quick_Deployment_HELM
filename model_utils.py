@@ -156,7 +156,6 @@ def get_local_huggingface_tokenizer_model(
             model_path,
             torch_dtype=torch.float16,
             use_auth_token=auth_token,
-            device_map=device_map,
             trust_remote_code=trust_remote_code
         )
     else:
