@@ -25,6 +25,7 @@ RUN pip3 install --no-cache-dir \
       bitsandbytes \
       einops \
       fastapi \
+      huggingface_hub \
       jinja2 \
       omegaconf \
       sentencepiece \
