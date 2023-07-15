@@ -208,7 +208,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
-                        output_hidden_states=True,  # return embeddings
+                        output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
                     )
                 else:
@@ -222,7 +222,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         max_new_tokens=self.task_info["output_len"],
                         return_dict_in_generate=True,
                         output_scores=output_scores,  # return logit score
-                        output_hidden_states=True,  # return embeddings
+                        output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
                         stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
                     )
