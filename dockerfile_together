@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+FROM --platform=linux/amd64 nvidia/cuda:12.2.0-devel-ubuntu20.04
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
@@ -15,9 +15,8 @@ WORKDIR /home/user
 ENV PATH /home/user/.local/bin:$PATH
 
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir cupy-cuda113 && \
-    pip install --no-cache-dir jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
-    pip install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+    pip install --no-cache-dir cupy-cuda12x && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 RUN pip3 install --no-cache-dir \
       git+https://github.com/huggingface/accelerate.git@5b9c5881b687af1c7a8807aa20ac4a6b36f085c9 \
