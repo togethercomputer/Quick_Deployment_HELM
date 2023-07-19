@@ -33,7 +33,7 @@ RUN pip3 install --no-cache-dir \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
-      'transformers @ git+https://github.com/togethercomputer/transformers_port'
+      'transformers @ git+https://github.com/togethercomputer/transformers_port@43a75627962c70db1f4b1272883aa34240531ca0'
 
 COPY cfg-neoxt-local.yaml /home/user/cfg-neoxt.yaml
 COPY cfg-neoxt-local-8bit.yaml /home/user/cfg-neoxt-8bit.yaml
