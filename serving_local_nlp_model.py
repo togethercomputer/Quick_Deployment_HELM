@@ -210,6 +210,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
+                        use_cache=True,
                     )
                 else:
                     outputs = self.model.generate(
@@ -225,6 +226,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
                         stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
+                        use_cache=True,
                     )
                 if output_scores:
                     ### hard code, assume bsz==1
