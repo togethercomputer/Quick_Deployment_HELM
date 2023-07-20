@@ -23,18 +23,6 @@ logger = logging.getLogger(__name__)
 
 logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
-def translate_chatml_to_openchat(prompt):
-    prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
-    prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
-    prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
-    prompt = prompt.replace('<|im_start|>user', '<human>:')
-    prompt = prompt.replace('<|im_start|>assistant', '<bot>:')
-    prompt = prompt.replace('\n<|im_end|>', '')
-    prompt = prompt.replace('<|im_end|>', '')
-    prompt = prompt.rstrip()
-    # print(prompt)
-    return prompt
-
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
     def __init__(self, model_name: str, args=None) -> None:
         super().__init__(model_name, args if args is not None else {})
@@ -66,29 +54,21 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
         trust_remote_code = args['trust_remote_code']
         no_return_token_type_ids = args['no_return_token_type_ids']
         self.skip_special_tokens = args['skip_special_tokens']
-        lora_adapters = args['lora_adapters']
-        quantize = args['quantize']   # bool
         dtype = args['dtype']
 
         if dtype == 'llm.int8':
-            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], args['model_path'], None, auth_token=auth_token)
-            self.model = model # int8 cannot do .to(device)
-            
-            if tokenizer.pad_token is None:
-                tokenizer.pad_token = tokenizer.eos_token
+            model, tokenizer = get_local_huggingface_tokenizer_model_llm_int8(args['hf_model_name'], None, auth_token=auth_token)
+            self.model = model
                 
             self.tokenizer = tokenizer
         else:
             model, tokenizer = get_local_huggingface_tokenizer_model(
                 args['hf_model_name'], 
-                args['model_path'], 
                 dtype,
                 auth_token=auth_token, 
                 max_memory=max_memory, 
                 trust_remote_code=trust_remote_code, 
                 device=self.device,
-                lora_adapters=lora_adapters,
-                quantize=quantize,
             )
 
             self.model = model
@@ -197,7 +177,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
             for iter_i in range(num_iter):
                 contexts = complete_contexts[iter_i * batch_size: (iter_i + 1) * batch_size]
                 # Do translation
-                contexts = [translate_chatml_to_openchat(context) for context in contexts]
                 inputs = self.tokenizer(contexts, padding=True, truncation=True, return_tensors="pt").to(self.device)
                 logging.debug(f"start_ids: length ({inputs.input_ids.shape[0]}) ids: {inputs.input_ids}")
                 input_length = inputs.input_ids.shape[1]
@@ -210,6 +189,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_scores=output_scores,  # return logit score
                         output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
+                        use_cache=True,
                     )
                 else:
                     outputs = self.model.generate(
@@ -225,6 +205,7 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                         output_hidden_states=output_scores,  # return embeddings
                         stream_tokens=self.task_info.get("stream_tokens"),
                         stopping_criteria=StoppingCriteriaList([StopWordsCriteria(self.task_info["stop"], self.tokenizer)]) if self.task_info.get("stop") else None,
+                        use_cache=True,
                     )
                 if output_scores:
                     ### hard code, assume bsz==1
@@ -292,36 +273,6 @@ class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
                 "raw_compute_time": time_elapsed
             }
         else:
-            """
-            inference_result = []
-            for outputs in output_buffer:
-                beam_width = self.task_info["beam_width"]
-                current_batch_size = outputs.sequences.shape[0] // beam_width
-                for sample_id in range(current_batch_size):
-                    item = {'choices': [], }
-                    for beam_id in range(beam_width):
-                        if self.hf_model_name == "google/flan-t5-xxl":
-                            token = outputs.sequences[sample_id*beam_width+beam_id, :]
-                        else:
-                            # exclude context input from the output
-                            token = outputs.sequences[sample_id*beam_width+beam_id, input_length:]
-                        logging.debug(f"[INFO] raw token: {token}")
-                        output = self.tokenizer.decode(token)
-                        logging.debug(f"[INFO] beam {beam_id}: \n[Context]\n{contexts}\n\n[Output]\n{output}\n")
-                        choice = {
-                            "text": post_processing_text(output, self.task_info["stop"], self.deny_list),
-                            "index": beam_id,
-                            "finish_reason": "length"
-                        }
-                        item['choices'].append(choice)
-                    inference_result.append(item)
-            result = {
-                "result_type": RequestTypeLanguageModelInference,
-                "choices": inference_result,
-                "raw_compute_time": time_elapsed,
-                # "output_length": [outputs.sequences.shape[0] for outputs in output_buffer]
-            }
-            """
             item = {'choices': [], }
             for i_output, outputs in enumerate(output_buffer):
                 beam_width = self.task_info["beam_width"]
@@ -363,17 +314,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--together_model_name', type=str, default=os.environ.get('SERVICE', 'Together-gpt-JT-6B-v1'),
                         help='worker name for together coordinator.')
-    parser.add_argument('--hf_model_name', type=str, default='facebook/opt-350m',
-                        help='hugging face model name (used to load config). Can also be LoRA adapters if --lora-base is passed.')
-    parser.add_argument('--model_path', type=str, default=None,
-                        help='hugging face model path (used to load config).')
+    parser.add_argument('--model_name', type=str, default=None,
+                        help='model name (used to load config). Can also be LoRA adapters if --lora-base is passed.')
     parser.add_argument('--worker_name', type=str, default=os.environ.get('WORKER', 'worker1'),
                         help='worker name for together coordinator.')
     parser.add_argument('--group_name', type=str, default=os.environ.get('GROUP', 'group1'),
                         help='group name for together coordinator.')
     parser.add_argument('--max_batch_size', type=int, default=8,
                         help='batch inference, the max batch for .')
-    parser.add_argument('--device', type=str, default="cuda",
+    parser.add_argument('--device', type=str, default=None,
                         help='device.')
     parser.add_argument('--dtype', type=str, default="fp16",
                         help='dtype.')
@@ -431,24 +380,12 @@ if __name__ == "__main__":
         for i in range(len(args.gpu_vram)):
             # assign CUDA ID as label and XGiB as value
             max_memory[int(args.gpu_vram[i].split(':')[0])] = f"{args.gpu_vram[i].split(':')[1]}GiB"
-    
-    # 4-bit quantization requires bfloat16
-    if args.quantize:
-        args.dtype = "bf16"
-
-    if args.lora_base != "":
-        base_model = args.lora_base
-        lora_adapters = args.hf_model_name
-    else:
-        base_model = args.hf_model_name
-        lora_adapters = ""
 
     fip = HuggingFaceLocalNLPModelInference(model_name=args.together_model_name, args={
         "coordinator": coordinator,
         "device": args.device,
         "dtype": torch_dtype_from_dtype(args.dtype) if args.dtype else None,
-        "hf_model_name": base_model,
-        "model_path": args.model_path,
+        "hf_model_name": args.model_name,
         "worker_name": args.worker_name,
         "group_name": args.group_name,
         "max_batch_size": args.max_batch_size,
@@ -466,7 +403,5 @@ if __name__ == "__main__":
         "trust_remote_code": args.trust_remote_code,
         "no_return_token_type_ids": args.no_return_token_type_ids,
         "skip_special_tokens": args.skip_special_tokens,
-        "lora_adapters": lora_adapters,
-        "quantize": args.quantize,
     })
     fip.start()
