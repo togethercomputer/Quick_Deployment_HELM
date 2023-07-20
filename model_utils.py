@@ -160,22 +160,25 @@ def get_local_huggingface_tokenizer_model(
             skip_special_tokens=True
         )
     else:
-        if max_memory == {}:
-            max_memory = None
+        if not quantize:
+            if max_memory == {}:
+                max_memory = None
 
-        config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
-        # load empty weights
-        with init_empty_weights():
-            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
-        model.tie_weights()
+            config = AutoConfig.from_pretrained(model_name, trust_remote_code=trust_remote_code)
+            # load empty weights
+            with init_empty_weights():
+                model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
+            model.tie_weights()
     
-        #create a device_map from max_memory
-        device_map = infer_auto_device_map(
-            model,
-            max_memory=max_memory,
-            no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
-            dtype=dtype,
-        )
+            #create a device_map from max_memory
+            device_map = infer_auto_device_map(
+                model,
+                max_memory=max_memory,
+                no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
+                dtype=dtype,
+            )
+        else:
+            device_map="auto"
                 
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
@@ -204,7 +207,8 @@ def get_local_huggingface_tokenizer_model(
         model = PeftModel.from_pretrained(model, lora_adapters)
 
     if max_memory == {} or lora_adapters != "":
-        model = model.to(device)
+        if not quantize:
+            model = model.to(device)
 
     return model, tokenizer
 
