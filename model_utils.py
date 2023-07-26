@@ -147,17 +147,41 @@ def get_local_huggingface_tokenizer_model(
             assert False
     elif model_path is not None and model_path != "":
         logger.warning("model_path is not None, but model_name is not given. Load from model_path only")
+        if not quantize:
+            if max_memory == {}:
+                max_memory = None
+
+            config = AutoConfig.from_pretrained(model_path, trust_remote_code=trust_remote_code)
+            # load empty weights
+            with init_empty_weights():
+                model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code)
+            model.tie_weights()
+
+            #create a device_map from max_memory
+            device_map = infer_auto_device_map(
+                model,
+                max_memory=max_memory,
+                no_split_module_classes=["GPTNeoXLayer", "DecoderLayer", "LlamaDecoderLayer", "MPTBlock", "CodeGenBlock"],
+                dtype=dtype,
+            )
+        else:
+            device_map="auto"
+
         tokenizer = AutoTokenizer.from_pretrained(
             model_path,
             use_auth_token=auth_token,
-            trust_remote_code=trust_remote_code
+            torch_dtype=dtype,
+            trust_remote_code=trust_remote_code,
+            skip_special_tokens=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
             model_path,
-            torch_dtype=torch.float16,
             use_auth_token=auth_token,
+            device_map=device_map if lora_adapters == "" else None,
             trust_remote_code=trust_remote_code,
-            skip_special_tokens=True
+            torch_dtype=dtype,
+            load_in_4bit=load_in_4bit,
+            quantization_config=quantization_config,
         )
     else:
         if not quantize:
