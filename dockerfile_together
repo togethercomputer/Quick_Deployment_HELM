@@ -30,10 +30,17 @@ RUN pip3 install --no-cache-dir \
       sentencepiece \
       together_worker==0.1.19 \
       uvicorn \
+      flash-attn --no-build-isolation \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
       'transformers @ git+https://github.com/togethercomputer/transformers_port@43a75627962c70db1f4b1272883aa34240531ca0'
+
+ENV CUDA_HOME="/usr/local/cuda"
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH}
+RUN pip3 install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
+ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
+    
 
 COPY cfg-neoxt-local.yaml /home/user/cfg-neoxt.yaml
 COPY cfg-neoxt-local-8bit.yaml /home/user/cfg-neoxt-8bit.yaml
