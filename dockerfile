@@ -35,7 +35,7 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     cd transformers_port && pip install . && cd .. && rm -rf transformers_port && \
     pip3 install fastapi uvicorn omegaconf jinja2 einops && \
     pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113  && \
-    pip3 install flash-attn && \
+    pip3 install flash-attn --no-build-isolation && \
     cd /build && \
     git clone https://github.com/alpa-projects/alpa.git && \
     cd alpa/examples && \
