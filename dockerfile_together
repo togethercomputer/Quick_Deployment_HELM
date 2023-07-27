@@ -3,7 +3,7 @@ FROM --platform=linux/amd64 nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt install --no-install-recommends -y coinor-cbc git wget python3-pip packaging && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install --no-install-recommends -y coinor-cbc git wget python3-pip && rm -rf /var/lib/apt/lists/*
 RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
     chmod +x /usr/local/bin/together-node
 
@@ -13,11 +13,14 @@ USER user
 WORKDIR /home/user
 
 ENV PATH /home/user/.local/bin:$PATH
+ENV CUDA_HOME="/usr/local/cuda"
 
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip packaging && \
     pip install --no-cache-dir cupy-cuda113 && \
     pip install --no-cache-dir jaxlib==0.3.22+cuda113.cudnn820 -f https://alpa-projects.github.io/wheels.html && \
     pip install --no-cache-dir torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH}
 
 RUN pip3 install --no-cache-dir \
       git+https://github.com/huggingface/accelerate.git@5b9c5881b687af1c7a8807aa20ac4a6b36f085c9 \
@@ -36,8 +39,6 @@ RUN pip3 install --no-cache-dir \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
       'transformers @ git+https://github.com/togethercomputer/transformers_port@43a75627962c70db1f4b1272883aa34240531ca0'
 
-ENV CUDA_HOME="/usr/local/cuda"
-ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH}
 RUN pip3 install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
 ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
     
