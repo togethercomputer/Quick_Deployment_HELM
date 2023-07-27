@@ -3,7 +3,7 @@ FROM --platform=linux/amd64 nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt install --no-install-recommends -y coinor-cbc git wget python3-pip && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install --no-install-recommends -y coinor-cbc git wget python3-pip packaging && rm -rf /var/lib/apt/lists/*
 RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
     chmod +x /usr/local/bin/together-node
 
@@ -30,7 +30,7 @@ RUN pip3 install --no-cache-dir \
       sentencepiece \
       together_worker==0.1.19 \
       uvicorn \
-      flash-attn --no-build-isolation \
+      flash-attn \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
