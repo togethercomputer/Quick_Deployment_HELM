@@ -8,6 +8,7 @@ WORKDIR /build
 RUN apt update && \
     apt install wget -y && \
     apt install git -y && \
+    apt install ninja -y && \
     apt install vim -y && \
     wget --quiet https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh -O ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \
@@ -18,6 +19,8 @@ RUN apt update && \
 # echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
 # echo "conda activate base" >> ~/.bashrc
 
+ENV CUDA_HOME="/usr/local/cuda"
+ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64/stubs:${LD_LIBRARY_PATH}
 # install conda alpa env
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda create --name alpa python=3.8 -y && \
@@ -39,7 +42,10 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip3 install -e . && \
     pip3 install sentencepiece && \
     pip3 install accelerate && \
+    pip3 install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary && \
     echo "conda activate alpa" >> ~/.bashrc
+
+ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
 
 RUN wget https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest -O /usr/local/bin/together-node && \
     chmod +x /usr/local/bin/together-node
