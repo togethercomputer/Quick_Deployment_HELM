@@ -31,12 +31,12 @@ RUN pip3 install --no-cache-dir \
       sentencepiece \
       together_worker==0.1.19 \
       uvicorn \
-      flash-attn \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
       'transformers @ git+https://github.com/togethercomputer/transformers_port@43a75627962c70db1f4b1272883aa34240531ca0'
 
+RUN pip3 install pip install flash-attn --no-build-isolation --no-cache-dir
 RUN pip3 install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
 ENV LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64
     
