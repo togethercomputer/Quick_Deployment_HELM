@@ -2,7 +2,29 @@
 
 To deploy a new docker image, merge a PR to the main branch.
 
-To bring up a standalone node:
+### To bring up a local REST server:
+
+```console
+mkdir -p .together/models
+chmod 777 .together .together/models
+docker run --rm --gpus device=0 \
+  -v $PWD/.together:/home/user/.together \
+  -e HF_HOME=/home/user/.together/models \
+  -e HTTP_HOST=0.0.0.0 \
+  -e SERVICE_DOMAIN=http \
+  -p 5001:5001 \
+  -it togethercomputer/native_hf_models /usr/bin/python3 serving_local_nlp_model.py --hf_model_name facebook/opt-350m
+```
+
+```console
+curl -X POST -H 'Content-Type: application/json' http://localhost:5001/ -d '{"prompt": "Space robots"}'
+```
+
+```console
+{"data": {"result_type": "language-model-inference", "choices": [{"text": " are a great way to get a lot of work done.", "index": 0, "finish_reason": "length"}], "raw_compute_time": 0.20327712898142636}}
+```
+
+### To bring up a standalone node:
 
 ```console
 docker run --pull=always --rm --gpus device=2 \
@@ -12,7 +34,7 @@ docker run --pull=always --rm --gpus device=2 \
  --worker.service OpenChatTest --worker.model gpt-neoxt-v0.15
 ```
 
-To bring up a standalone node with retrieval:
+### To bring up a standalone node with retrieval:
 
 ```console
 docker run --pull=always --rm --gpus device=2 \
@@ -23,7 +45,7 @@ docker run --pull=always --rm --gpus device=2 \
  --worker.service ock-faiss --worker.model gpt-neoxt-v0.15
 ```
 
-To bring up a standalone safety model:
+### To bring up a standalone safety model:
 
 ```console
 docker run --pull=always --rm --gpus device=2 \
@@ -33,13 +55,13 @@ docker run --pull=always --rm --gpus device=2 \
  --worker.service SafetyTest --worker.model gpt-jt-safety
 ```
 
-Start opt-350m in CPU on Mac laptop:
+### Start opt-350m in CPU on Mac laptop:
 
 ```console
 ~/together-node/build/together-node start --config ./cfg-opt-350m-docker-macos.yaml
 ```
 
-Start opt-350m in CPU on Linux:
+### Start opt-350m in CPU on Linux:
 
 ```console
 curl -O https://together-distro-packages.s3.us-west-2.amazonaws.com/linux/x86_64/bin/together-node-latest

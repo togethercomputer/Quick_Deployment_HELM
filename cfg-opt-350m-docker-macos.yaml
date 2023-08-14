@@ -10,5 +10,6 @@ worker:
     alloc: each
   network:
     mode: host
-  command: /opt/conda/envs/alpa/bin/python serving_local_nlp_model.py --hf_model_name facebook/opt-350m --device cpu --dtype fp32
+  command: /usr/bin/python3 serving_local_nlp_model.py --hf_model_name facebook/opt-350m --device cpu --dtype fp32
   env: HF_HOME=/home/user/.together/models COORD_URL=host.docker.internal PYTHONUNBUFFERED=1
+  service: my-opt-350m
