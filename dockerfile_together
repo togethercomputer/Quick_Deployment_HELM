@@ -29,7 +29,7 @@ RUN pip3 install --no-cache-dir \
       jinja2 \
       omegaconf \
       sentencepiece \
-      together_worker==0.1.19 \
+      together_worker==0.1.20 \
       uvicorn \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
