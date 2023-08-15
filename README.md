@@ -21,7 +21,27 @@ curl -X POST -H 'Content-Type: application/json' http://localhost:5001/ -d '{"pr
 ```
 
 ```console
-{"data": {"result_type": "language-model-inference", "choices": [{"text": " are a great way to get a lot of work done.", "index": 0, "finish_reason": "length"}], "raw_compute_time": 0.20327712898142636}}
+{"result_type": "language-model-inference", "choices": [{"text": " are a great way to get a lot of work done.", "index": 0, "finish_reason": "length"}], "raw_compute_time": 0.20327712898142636}
+```
+
+### Bridge local REST server to Together Inference API:
+
+```console
+together-node start -f none --worker.mode existing-service --worker.service my-foobar --worker.port 5001
+```
+
+```console
+curl -X POST https://api.together.xyz/inference \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer YOUR-API-KEY-HERE' \
+  -d '{
+  "model": "my-foobar",
+  "prompt": "Space robots"
+}'
+```
+
+```console
+{"status":"finished","prompt":["Space robots"],"model":"my-foobar","model_owner":"","tags":{},"num_returns":1,"args":{"model":"my-foobar","prompt":"Space robots"},"subjobs":[],"output":{"choices":[{"finish_reason":"length","index":0,"text":" are a great way to get a lot of work done."}],"raw_compute_time":0.20714728604070842,"result_type":"language-model-inference"}}
 ```
 
 ### To bring up a standalone node:
