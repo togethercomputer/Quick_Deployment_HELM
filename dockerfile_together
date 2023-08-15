@@ -34,7 +34,9 @@ RUN pip3 install --no-cache-dir \
       git+https://github.com/huggingface/peft.git@b1bafca3332c7ff21dcb92892df38a04d3b43d56 \
       scipy \
       'llm_serving @ git+https://github.com/alpa-projects/alpa#subdirectory=examples' \
-      'transformers @ git+https://github.com/togethercomputer/transformers_port@v0.0.1'
+      'transformers @ git+https://github.com/togethercomputer/transformers_port@v0.0.1' \
+      tiktoken \
+      transformers_stream_generator
 
 RUN MAX_JOBS=2 pip3 install pip install flash-attn --no-build-isolation --no-cache-dir
 RUN pip3 install git+https://github.com/HazyResearch/flash-attention.git#subdirectory=csrc/rotary
