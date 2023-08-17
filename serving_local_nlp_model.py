@@ -24,15 +24,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(int(os.environ.get('LOG_LEVEL', logging.DEBUG)))
 
 def translate_chatml_to_openchat(prompt):
-    prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
-    prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
-    prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
-    prompt = prompt.replace('<|im_start|>user', '<human>:')
-    prompt = prompt.replace('<|im_start|>assistant', '<bot>:')
-    prompt = prompt.replace('\n<|im_end|>', '')
-    prompt = prompt.replace('<|im_end|>', '')
-    prompt = prompt.rstrip()
-    # print(prompt)
+    if '<|im_start|>' in prompt:
+        prompt = prompt.replace('<|im_start|>system\n', '<human>: ')
+        prompt = prompt.replace('<|im_start|>user\n', '<human>: ')
+        prompt = prompt.replace('<|im_start|>assistant\n', '<bot>: ')
+        prompt = prompt.replace('<|im_start|>user', '<human>:')
+        prompt = prompt.replace('<|im_start|>assistant', '<bot>:')
+        prompt = prompt.replace('\n<|im_end|>', '')
+        prompt = prompt.replace('<|im_end|>', '')
+        prompt = prompt.rstrip()
     return prompt
 
 class HuggingFaceLocalNLPModelInference(FastInferenceInterface):
