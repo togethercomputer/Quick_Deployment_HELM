@@ -139,6 +139,10 @@ def get_local_huggingface_tokenizer_model(
         tokenizer = AutoTokenizer.from_pretrained("openlm-research/open_llama_7b_preview_200bt")
         model = AutoModelForCausalLM.from_pretrained("openlm-research/open_llama_7b_preview_200bt")
 
+    elif model_name == 'upstage/SOLAR-0-70b-8bit':
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name,torch_dtype=torch.float16, load_in_8bit=True, rope_scaling={"type": "dynamic", "factor": 2}
+
     elif model_name == 'Together/gpt-neoxT-20b':
         if model_path is not None:
             tokenizer = AutoTokenizer.from_pretrained(model_path)
